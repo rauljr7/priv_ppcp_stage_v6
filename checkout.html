@@ -1,0 +1,236 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Checkout</title>
+  <link href="https://fonts.cdnfonts.com/css/br-shape" rel="stylesheet">
+  <link rel="stylesheet" href="assets/css/theme.css">
+  <link rel="stylesheet" href="assets/css/nav.css">
+  <link rel="stylesheet" href="assets/css/layout.css">
+  <link rel="stylesheet" href="assets/css/checkout.css">
+</head>
+<body id="app_root">
+  <header id="site_header">
+    <nav id="primary_nav">
+      <div class="container" aria-label="Primary">
+        <ul id="nav_links">
+          <li><a id="nav_home" href="index.html">Home</a></li>
+          <li><a id="nav_product" href="product.html">Product</a></li>
+          <li><a id="nav_cart" href="cart.html">Cart</a></li>
+          <li><a id="nav_checkout" aria-current="page" href="checkout.html">Checkout</a></li>
+        </ul>
+
+        <a id="nav_cart_button" data-cart href="cart.html" aria-label="Open cart"><svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"> <path d="M7 4h-2l-1 2h2l2.6 7h8.7l2.3-6H9.4" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/> <circle cx="10" cy="20" r="1.6" fill="currentColor"/> <circle cx="17" cy="20" r="1.6" fill="currentColor"/> </svg>
+        </a>
+      </div>
+    </nav>
+  </header>
+
+  <main id="main_content">
+    <div class="container" id="page_container">
+      <h1 id="page_title">Checkout</h1>
+
+      <section class="checkout-page" id="checkout_page">
+        <div class="checkout-left-panel" id="checkout_left_panel">
+          <div class="checkout-left-card" id="checkout_steps_card" aria-label="Checkout steps">
+
+            <details id="step_contact">
+              <summary id="contact_summary">Contact Information</summary>
+              <div class="section_body" id="contact_body">
+                <div class="field_row_full" id="contact_email_row">
+                  <label for="contact_email_input">Email</label>
+                  <input id="contact_email_input" type="email" placeholder="you@example.com" autocomplete="email">
+                </div>
+                <div class="section_actions" id="contact_actions">
+                  <button type="button" id="contact_next_btn" data-next>Next</button>
+                </div>
+              </div>
+            </details>
+
+            <details id="step_billing">
+              <summary id="billing_summary">Billing Information</summary>
+              <div class="section_body" id="billing_body">
+                <div class="field_row" id="billing_top_row">
+                  <div>
+                    <label for="bill_name_input">Full Name</label>
+                    <input id="bill_name_input" type="text" autocomplete="name" placeholder="Full Name">
+                  </div>
+                  <div>
+                    <label for="bill_phone_input">Phone</label>
+                    <input id="bill_phone_input" type="tel" autocomplete="tel" placeholder="(555) 555-5555">
+                  </div>
+                </div>
+                <div class="field_row_full" id="bill_address_row">
+                  <label for="bill_address_input">Address</label>
+                  <input id="bill_address_input" type="text" autocomplete="address-line1" placeholder="Street address">
+                </div>
+                <div class="field_row" id="bill_city_state_row">
+                  <div>
+                    <label for="bill_city_input">City</label>
+                    <input id="bill_city_input" type="text" autocomplete="address-level2" placeholder="City">
+                  </div>
+                  <div>
+                    <label for="bill_state_input">State/Province</label>
+                    <input id="bill_state_input" type="text" autocomplete="address-level1" placeholder="State/Province">
+                  </div>
+                </div>
+                <div class="field_row" id="bill_postal_country_row">
+                  <div>
+                    <label for="bill_postal_input">Postal Code</label>
+                    <input id="bill_postal_input" type="text" autocomplete="postal-code" placeholder="ZIP / Postal code">
+                  </div>
+                  <div>
+                    <label for="bill_country_input">Country</label>
+                    <input id="bill_country_input" type="text" autocomplete="country" placeholder="Country">
+                  </div>
+                </div>
+                <div class="section_actions" id="billing_actions">
+                  <button type="button" id="billing_next_btn" data-next>Next</button>
+                </div>
+              </div>
+            </details>
+
+            <details id="step_shipping_info">
+              <summary id="shipping_info_summary">Shipping Information</summary>
+              <div class="section_body" id="shipping_info_body">
+                <div class="spacer-8" id="ship_spacer_top"></div>
+                <button type="button" id="same_as_billing_btn" data-same-as-billing>Same as billing</button>
+                <div class="spacer-8" id="ship_spacer_bottom"></div>
+
+                <div class="field_row" id="ship_top_row">
+                  <div>
+                    <label for="ship_name_input">Full Name</label>
+                    <input id="ship_name_input" type="text" placeholder="Full Name">
+                  </div>
+                  <div>
+                    <label for="ship_phone_input">Phone</label>
+                    <input id="ship_phone_input" type="tel" placeholder="(555) 555-5555">
+                  </div>
+                </div>
+                <div class="field_row_full" id="ship_address_row">
+                  <label for="ship_address_input">Address</label>
+                  <input id="ship_address_input" type="text" placeholder="Street address">
+                </div>
+                <div class="field_row" id="ship_city_state_row">
+                  <div>
+                    <label for="ship_city_input">City</label>
+                    <input id="ship_city_input" type="text" placeholder="City">
+                  </div>
+                  <div>
+                    <label for="ship_state_input">State/Province</label>
+                    <input id="ship_state_input" type="text" placeholder="State/Province">
+                  </div>
+                </div>
+                <div class="field_row" id="ship_postal_country_row">
+                  <div>
+                    <label for="ship_postal_input">Postal Code</label>
+                    <input id="ship_postal_input" type="text" placeholder="ZIP / Postal code">
+                  </div>
+                  <div>
+                    <label for="ship_country_input">Country</label>
+                    <input id="ship_country_input" type="text" placeholder="Country">
+                  </div>
+                </div>
+                <div class="section_actions" id="shipping_info_actions">
+                  <button type="button" id="shipping_info_next_btn" data-next>Next</button>
+                </div>
+              </div>
+            </details>
+
+          <details id="step_shipping_methods">
+            <summary id="shipping_methods_summary">Shipping Methods</summary>
+            <div class="section_body" id="shipping_methods_body">
+              <div class="field_row_full" id="ship_method_row">
+                <label for="ship_method_select">Choose a shipping method</label>
+                <select id="ship_method_select" name="shipping_method">
+                  <option id="ship_opt_placeholder" value="" selected disabled>Select Shipping Method</option>
+                  <option id="ship_opt_free" value="free">Free (7–10 business days)</option>
+                  <option id="ship_opt_standard" value="standard">Standard (3–5 business days)</option>
+                  <option id="ship_opt_express" value="express">Express (1–2 business days)</option>
+                </select>
+              </div>
+              <div class="section_actions" id="shipping_methods_actions">
+                <button type="button" id="shipping_methods_next_btn" data-next>Next</button>
+              </div>
+            </div>
+          </details>
+
+
+            <details id="step_payment">
+              <summary id="payment_summary">Payment Methods</summary>
+              <div class="section_body" id="payment_body">
+                <h3 id="wallets_heading" style="margin-top:0;">Digital Wallets</h3>
+
+                <div id="wallet_buttons" data-express-list>
+                  <button type="button" id="wallet_paypal_btn" data-express aria-label="PayPal">PayPal</button>
+                  <button type="button" id="wallet_venmo_btn" data-express aria-label="Venmo">Venmo</button>
+                  <button type="button" id="wallet_paylater_btn" data-express aria-label="Pay Later">Pay Later</button>
+                  <button type="button" id="wallet_gpay_btn" data-express aria-label="Google Pay">Google&nbsp;Pay</button>
+                  <button type="button" id="wallet_applepay_btn" data-express aria-label="Apple Pay">Apple&nbsp;Pay</button>
+                </div>
+
+                <hr id="pay_divider_hr" data-label="or">
+
+                <h3 id="card_heading">Credit/Debit Card</h3>
+                <div class="field_row_full" id="card_name_row">
+                  <label for="card_name_input">Name on Card</label>
+                  <input id="card_name_input" type="text" autocomplete="cc-name" placeholder="Name on card">
+                </div>
+                <div class="field_row_full" id="card_number_row">
+                  <label for="card_number_input">Card Number</label>
+                  <input id="card_number_input" type="text" inputmode="numeric" autocomplete="cc-number" placeholder="1234 5678 9012 3456">
+                </div>
+                <div class="field_row" id="card_exp_cvv_row">
+                  <div>
+                    <label for="card_exp_input">Expiration</label>
+                    <input id="card_exp_input" type="text" inputmode="numeric" autocomplete="cc-exp" placeholder="MM/YY">
+                  </div>
+                  <div>
+                    <label for="card_cvv_input">CVV</label>
+                    <input id="card_cvv_input" type="text" inputmode="numeric" autocomplete="cc-csc" placeholder="123">
+                  </div>
+                </div>
+              </div>
+            </details>
+
+          </div>
+        </div>
+
+        <aside class="checkout-right-panel" id="order_summary_panel" aria-label="Order summary">
+          <h2 id="summary_title" style="margin-top:0;">Summary</h2>
+          <div class="summary_line" id="summary_subtotal_line">
+            <span id="summary_subtotal_label">Subtotal</span>
+            <b id="summary_subtotal_value">$49.00</b>
+          </div>
+          <div class="summary_line" id="summary_shipping_line">
+            <span id="summary_shipping_label">Shipping</span>
+            <b id="summary_shipping_value">$0.00</b>
+          </div>
+          <div class="summary_line summary_total" id="summary_total_line">
+            <span id="summary_total_label">Order Total</span>
+            <b id="summary_total_value">$49.00</b>
+          </div>
+          <div class="summary_actions" id="summary_actions">
+            <button type="button" id="summary_place_order_btn" data-place-order style="width:100%;">Place Order</button>
+          </div>
+        </aside>
+      </section>
+    </div>
+  </main>
+
+  <footer id="site_footer">
+    <div class="container">
+      <div id="footer_copyright">© Acme Co.</div>
+      <nav aria-label="Legal" id="footer_legal_nav">
+        <a id="footer_privacy" href="#">Privacy</a>
+        <a id="footer_terms" href="#">Terms</a>
+        <a id="footer_legal" href="#">Legal</a>
+      </nav>
+    </div>
+  </footer>
+  <script src="assets/js/session.js" defer></script>
+  <script src="assets/js/website_options.js" defer></script>
+  <script src="assets/js/checkout.js" defer></script>
+</body>
+</html>

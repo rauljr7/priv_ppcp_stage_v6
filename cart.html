@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Cart</title>
+  <link href="https://fonts.cdnfonts.com/css/br-shape" rel="stylesheet">
+  <link rel="stylesheet" href="assets/css/theme.css">
+  <link rel="stylesheet" href="assets/css/nav.css">
+  <link rel="stylesheet" href="assets/css/layout.css">
+  <link rel="stylesheet" href="assets/css/cart.css">
+</head>
+<body id="app_root">
+
+  <header id="site_header">
+    <nav id="primary_nav">
+      <div class="container" aria-label="Primary">
+        <ul id="nav_links">
+          <li><a id="nav_home" href="index.html">Home</a></li>
+          <li><a id="nav_product" href="product.html">Product</a></li>
+        <li><a id="nav_cart" aria-current="page" href="cart.html">Cart</a></li>
+          <li><a id="nav_checkout" href="checkout.html">Checkout</a></li>
+        </ul>
+
+        <a id="nav_cart_button" data-cart href="cart.html" aria-label="Open cart"><svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"> <path d="M7 4h-2l-1 2h2l2.6 7h8.7l2.3-6H9.4" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/> <circle cx="10" cy="20" r="1.6" fill="currentColor"/> <circle cx="17" cy="20" r="1.6" fill="currentColor"/> </svg>
+        </a>
+      </div>
+    </nav>
+  </header>
+
+  <main id="main_content">
+    <div class="container" id="page_container">
+      <section class="cart-page" id="cart_page">
+        <h1 id="page_title">Cart</h1>
+
+        <div class="cart-card" id="cart_card" role="region" aria-label="Shopping cart">
+          <table id="cart_table" aria-describedby="cart_table_caption">
+            <caption id="cart_table_caption" style="text-align:left; padding:8px 0;">
+              Review your items
+            </caption>
+            <thead id="cart_table_head">
+              <tr id="cart_header_row">
+                <th scope="col">Actions</th>
+                <th scope="col">Product</th>
+                <th scope="col">Price</th>
+                <th scope="col">Options</th>
+                <th scope="col">Quantity</th>
+                <th scope="col">Subtotal</th>
+              </tr>
+            </thead>
+            <tbody id="cart_table_body">
+              <tr id="cart_row_1" data-sku="WID-001">
+                <td id="cart_row_1_actions" style="width: 96px;">
+                  <a id="remove_item_btn_1" href="#" data-remove aria-label="Remove Widget">x</a>
+                </td>
+                <td id="cart_row_1_product">
+                  <div class="product_cell" id="product_cell_1">
+                    <img id="cart_item_thumb_1" class="product_thumb" src="assets/images/widget.png" alt="Widget thumbnail">
+                    <div>
+                      <div id="cart_item_name_1">Widget</div>
+                      <small id="cart_item_sku_1">SKU: WID-001</small>
+                    </div>
+                  </div>
+                </td>
+                <td id="cart_item_price_1">$49</td>
+                <td id="cart_item_options_1">
+                  <div id="cart_item_model_1" data-model="standard">Widget Model: Standard</div>
+                  <div id="cart_item_color_1" data-color="black">Color: Black</div>
+                </td>
+                <td class="qty_input" id="cart_item_qty_cell_1">
+                  <input id="quantity_input_1" type="number" name="quantity" value="1" min="1" inputmode="numeric" aria-label="Quantity">
+                </td>
+                <td id="cart_item_subtotal_1">$49</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <div class="cart-actions-stack" id="cart_actions">
+          <button type="button" id="update_cart_btn" data-update-cart>Update Cart</button>
+          <a id="proceed_checkout_btn" href="checkout.html" data-checkout role="button">Checkout</a>
+          <hr id="express_divider_hr" data-label="Express Checkout">
+          <div id="express_list" data-express-list>
+            <button type="button" id="express_paypal_btn" data-express aria-label="PayPal">PayPal</button>
+            <button type="button" id="express_venmo_btn" data-express aria-label="Venmo">Venmo</button>
+            <button type="button" id="express_paylater_btn" data-express aria-label="Pay Later">Pay Later</button>
+            <button type="button" id="express_gpay_btn" data-express aria-label="Google Pay">Google&nbsp;Pay</button>
+            <button type="button" id="express_applepay_btn" data-express aria-label="Apple Pay">Apple&nbsp;Pay</button>
+          </div>
+        </div>
+      </section>
+    </div>
+  </main>
+
+  <footer id="site_footer">
+    <div class="container">
+      <div id="footer_copyright">© Acme Co.</div>
+      <nav aria-label="Legal" id="footer_legal_nav">
+        <a id="footer_privacy" href="#">Privacy</a>
+        <a id="footer_terms" href="#">Terms</a>
+        <a id="footer_legal" href="#">Legal</a>
+      </nav>
+    </div>
+  </footer>
+  <script src="assets/js/session.js" defer></script>
+  <script src="assets/js/website_options.js" defer></script>
+  <script src="assets/js/cart.js" defer></script>
+</body>
+</html>
