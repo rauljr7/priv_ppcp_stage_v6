@@ -545,9 +545,7 @@ function on_model_or_color_or_qty_change() {
     return;
   }
   render_price_for_selection(current_product_object);
-  update_session_from_ui(current_product_object).then(function () {
-    update_add_to_cart_cta_based_on_cart();
-  });
+  update_add_to_cart_cta_based_on_cart();
 }
 
 function handle_input(event) {
