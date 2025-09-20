@@ -1,33 +1,22 @@
-<!doctype html>
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
-    <title>One-Time Payment - Recommended Integration - PayPal Web SDK</title>
+    <title>One-Time Payment - Direct App Switch Flow - PayPal Web SDK</title>
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <style>
-      .buttons-container {
-        display: flex;
-        flex-direction: column;
-        gap: 12px;
-      }
-    </style>
   </head>
-  <body>
-    <h1>One-Time Payment Recommended Integration</h1>
 
-    <div class="buttons-container">
-      <paypal-button id="paypal-button" type="pay" hidden></paypal-button>
-      <paypal-pay-later-button
-        id="paylater-button"
-        hidden
-      ></paypal-pay-later-button>
-      <paypal-credit-button
-        id="paypal-credit-button"
-        hidden
-      ></paypal-credit-button>
+  <body>
+    <h1>Paypal Direct App Switch Flow</h1>
+    <div>
+      <input type="checkbox" id="enable-auto-redirect" checked />
+      <label for="enable-auto-redirect"> Enable auto-redirect </label>
     </div>
+    <div id="button-container">
+      <paypal-button id="paypal-button" hidden></paypal-button>
+    </div>
+
     <script>
-        async function onPayPalWebSdkLoaded() {
+      async function onPayPalWebSdkLoaded() {
   try {
     const clientToken = await getBrowserSafeClientToken();
     const sdkInstance = await window.paypal.createInstance({
@@ -35,25 +24,14 @@
       components: ["paypal-payments"],
       pageType: "checkout",
     });
+    const paypalPaymentSession = sdkInstance.createPayPalOneTimePaymentSession(
+      paymentSessionOptions,
+    );
 
-    const paymentMethods = await sdkInstance.findEligibleMethods({
-      currencyCode: "USD",
-    });
-
-    if (paymentMethods.isEligible("paypal")) {
-      setupPayPalButton(sdkInstance);
-    }
-
-    if (paymentMethods.isEligible("paylater")) {
-      const paylaterPaymentMethodDetails =
-        paymentMethods.getDetails("paylater");
-      setupPayLaterButton(sdkInstance, paylaterPaymentMethodDetails);
-    }
-
-    if (paymentMethods.isEligible("credit")) {
-      const paypalCreditPaymentMethodDetails =
-        paymentMethods.getDetails("credit");
-      setupPayPalCreditButton(sdkInstance, paypalCreditPaymentMethodDetails);
+    if (paypalPaymentSession.hasReturned()) {
+      await paypalPaymentSession.resume();
+    } else {
+      setupPayPalButton(paypalPaymentSession);
     }
   } catch (error) {
     console.error(error);
@@ -76,68 +54,28 @@ const paymentSessionOptions = {
   },
 };
 
-async function setupPayPalButton(sdkInstance) {
-  const paypalPaymentSession = sdkInstance.createPayPalOneTimePaymentSession(
-    paymentSessionOptions,
-  );
-
+async function setupPayPalButton(paypalPaymentSession) {
+  const enableAutoRedirect = document.querySelector("#enable-auto-redirect");
   const paypalButton = document.querySelector("#paypal-button");
   paypalButton.removeAttribute("hidden");
 
   paypalButton.addEventListener("click", async () => {
+    const createOrderPromiseReference = createRedirectOrder();
+
     try {
-      await paypalPaymentSession.start(
-        { presentationMode: "auto" },
-        createOrder(),
+      const { redirectURL } = await paypalPaymentSession.start(
+        {
+          presentationMode: "direct-app-switch",
+          autoRedirect: {
+            enabled: enableAutoRedirect.checked,
+          },
+        },
+        createOrderPromiseReference,
       );
-    } catch (error) {
-      console.error(error);
-    }
-  });
-}
-
-async function setupPayLaterButton(sdkInstance, paylaterPaymentMethodDetails) {
-  const paylaterPaymentSession =
-    sdkInstance.createPayLaterOneTimePaymentSession(paymentSessionOptions);
-
-  const { productCode, countryCode } = paylaterPaymentMethodDetails;
-  const paylaterButton = document.querySelector("#paylater-button");
-
-  paylaterButton.productCode = productCode;
-  paylaterButton.countryCode = countryCode;
-  paylaterButton.removeAttribute("hidden");
-
-  paylaterButton.addEventListener("click", async () => {
-    try {
-      await paylaterPaymentSession.start(
-        { presentationMode: "auto" },
-        createOrder(),
-      );
-    } catch (error) {
-      console.error(error);
-    }
-  });
-}
-
-async function setupPayPalCreditButton(
-  sdkInstance,
-  paypalCreditPaymentMethodDetails,
-) {
-  const paypalCreditPaymentSession =
-    sdkInstance.createPayPalCreditOneTimePaymentSession(paymentSessionOptions);
-
-  const { countryCode } = paypalCreditPaymentMethodDetails;
-  const paypalCreditButton = document.querySelector("#paypal-credit-button");
-
-  paypalCreditButton.countryCode = countryCode;
-  paypalCreditButton.removeAttribute("hidden");
-
-  paypalCreditButton.addEventListener("click", async () => {
-    try {
-      await paypalCreditPaymentSession.start(
-        { presentationMode: "auto" },
-        createOrder(),
-      );
+      if (redirectURL) {
+        console.log(`redirectURL: ${redirectURL}`);
+        window.location.assign(redirectURL);
+      }
     } catch (error) {
       console.error(error);
     }
@@ -145,6 +83,7 @@ async function setupPayPalCreditButton(
 }
 
 async function getBrowserSafeClientToken() {
+
   let base_url = "https://faas-sfo3-7872a1dd.doserverless.co/api/v1/web/fn-2b157b93-6e85-4f0d-b040-eccd1b257eef/default/ppcp-v6-endpoints";
   let url = base_url + "?method=client_token";
 
@@ -167,18 +106,43 @@ async function getBrowserSafeClientToken() {
   });
 }
 
-async function createOrder() {
-  const response = await fetch(
-    "/paypal-api/checkout/orders/create-with-sample-data",
-    {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
+async function createRedirectOrder() {
+  const orderPayload = {
+    intent: "CAPTURE",
+    paymentSource: {
+      paypal: {
+        experienceContext: {
+          shippingPreference: "NO_SHIPPING",
+          userAction: "CONTINUE",
+          returnUrl: window.location.href,
+          cancelUrl: window.location.href,
+        },
       },
     },
-  );
-  const { id } = await response.json();
+    purchaseUnits: [
+      {
+        amount: {
+          currencyCode: "USD",
+          value: "10.00",
+          breakdown: {
+            itemTotal: {
+              currencyCode: "USD",
+              value: "10.00",
+            },
+          },
+        },
+      },
+    ],
+  };
 
+  const response = await fetch("/paypal-api/checkout/orders/create", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify(orderPayload),
+  });
+  const { id } = await response.json();
   return { orderId: id };
 }
 
@@ -193,15 +157,13 @@ async function captureOrder({ orderId }) {
     },
   );
   const data = await response.json();
-
   return data;
 }
     </script>
-
     <script
       async
-      src="https://www.sandbox.paypal.com/web-sdk/v6/core"
       onload="onPayPalWebSdkLoaded()"
+      src="https://www.sandbox.paypal.com/web-sdk/v6/core"
     ></script>
   </body>
 </html>
