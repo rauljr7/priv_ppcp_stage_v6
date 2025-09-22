@@ -216,18 +216,21 @@ function map_order_payload_to_paypal(src) {
 }
 
 async function captureOrder({ orderId }) {
-  const response = await fetch(
-    `/paypal-api/checkout/orders/${orderId}/capture`,
-    {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
+  const base_url = "https://faas-sfo3-7872a1dd.doserverless.co/api/v1/web/fn-2b157b93-6e85-4f0d-b040-eccd1b257eef/default/ppcp-v6-endpoints";
+  const url = base_url + "?method=capture_order";
+
+  const response = await fetch(url, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json"
     },
-  );
+    body: JSON.stringify({ id: orderId })
+  });
+
   const data = await response.json();
   return data;
 }
+
     </script>
     <script
       async
