@@ -36,7 +36,6 @@
     );
 
     if (paypalPaymentSession.hasReturned()) {
-      console.log("has returned??");
       await paypalPaymentSession.resume();
     } else {
       setupPayPalButton(paypalPaymentSession);
@@ -73,7 +72,7 @@ async function setupPayPalButton(paypalPaymentSession) {
     try {
       const { redirectURL } = await paypalPaymentSession.start(
         {
-          presentationMode: "direct-app-switch",
+          presentationMode: "auto",
           autoRedirect: {
             enabled: enableAutoRedirect.checked,
           },
