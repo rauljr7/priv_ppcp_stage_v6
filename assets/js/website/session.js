@@ -280,7 +280,6 @@ function set_session_purchase_unit_shipping_from_top_level(pu_index) {
     }
 
     let shipping_out = {
-      type: "SHIPPING",
       options: options_out,
       name: {
         full_name: fullname_val
