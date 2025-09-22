@@ -13,7 +13,6 @@
   <body>
     <paypal-button class="paypal-blue" id="paypal-button"></paypal-button>
     <script src="assets/js/paypal/utils.js" defer></script>
-    <script onload="onPayPalWebSdkLoaded()" src="https://www.sandbox.paypal.com/web-sdk/v6/core"></script>
     <script defer>
       async function onPayPalWebSdkLoaded() {
         try {
@@ -74,5 +73,6 @@
       }
 
     </script>
+    <script onload="onPayPalWebSdkLoaded()" src="https://www.sandbox.paypal.com/web-sdk/v6/core"></script>
   </body>
 </html>
