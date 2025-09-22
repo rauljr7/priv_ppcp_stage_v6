@@ -1,164 +1,150 @@
-/* Page wrap */
-.receipt-wrapper {
-  min-height: calc(100dvh - 160px);
-  display: grid;
-  place-items: center;
-  padding: 24px 0;
+/* Scope styling to the receipt page only */
+body#receipt_page {
+  font-size: 14px;          /* smaller text */
+  line-height: 1.35;        /* tighter line-height */
 }
 
-/* Big, soft card */
+/* Main wrapper */
+#receipt_wrap {
+  max-width: 920px;
+  margin: 24px auto;
+  padding: 0 12px;
+}
+
+/* Card */
 .receipt-card {
-  width: 100%;
-  max-width: 880px;
   background: #fff;
-  border-radius: 20px;
+  border-radius: 18px;       /* rounded corners */
   box-shadow: var(--shadow-lg);
-  padding: clamp(16px, 3vw, 28px);
+  padding: 16px 16px;        /* tighter */
 }
 
-/* Header */
-.receipt-header {
-  display: grid;
-  gap: 12px;
-  margin-bottom: 10px;
+/* Headline */
+#receipt_title {
+  font-size: 1.35rem;        /* compact title */
+  margin: 0 0 8px 0;
 }
-.receipt-title-wrap {
+
+/* Top bar (id + status) */
+#receipt_top_meta {
   display: flex;
+  flex-wrap: wrap;
+  gap: 8px 12px;
   align-items: center;
   justify-content: space-between;
-  gap: 12px;
+  margin-bottom: 12px;
 }
-#receipt_title {
-  margin: 0;
-  font-size: clamp(1.25rem, 2.4vw, 1.6rem);
-}
-.status-badge {
-  font-size: 0.85rem;
+
+#receipt_order_id {
   font-weight: 700;
-  padding: 6px 10px;
-  border-radius: 999px;
-  display: inline-block;
-  box-shadow: var(--shadow-md);
-  letter-spacing: 0.2px;
 }
-.status-completed { color: #065f46; background: #d1fae5; }
-.status-pending   { color: #92400e; background: #fef3c7; }
-.status-cancelled { color: #991b1b; background: #fee2e2; }
 
-.receipt-meta {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(210px,1fr));
-  gap: 8px 16px;
-}
-.kv { display:flex; align-items:center; justify-content:space-between; gap:8px; padding:10px 12px; border:1px solid #e5e7eb; border-radius:10px; background:#fafafa; }
-.kv .k { color: var(--muted); }
-.kv .v { font-weight:700; }
-
-/* Sections */
-.section { margin-top: 16px; }
-.section-title { margin: 0 0 8px 0; font-size: 1.05rem; }
-
-/* Items sheet (modern table) */
-.items-sheet {
-  border: 1px solid #e5e7eb;
-  border-radius: 14px;
-  overflow: hidden;
-}
-.items-row {
-  display: grid;
-  grid-template-columns: 1fr 80px 120px 140px;
-  gap: 0;
-  padding: 12px 14px;
+.badge {
+  display: inline-flex;
   align-items: center;
+  gap: 6px;
+  border: 1px solid #e5e7eb;
+  padding: 4px 8px;
+  border-radius: 999px;
+  font-size: 0.85rem;
+  background: #f9fafb;
 }
-.items-head {
+
+/* Section */
+.section {
+  border: 1px solid #eef0f3;
+  border-radius: 14px;
+  padding: 12px;             /* tighter */
+  margin: 10px 0;            /* tighter */
+  background: #fff;
+}
+
+.section-title {
+  font-size: 1.05rem;
+  font-weight: 700;
+  margin: 0 0 8px 0;
+}
+
+/* Two-column grids (addresses, buyer/payment, etc.) */
+.two-col {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;                 /* tighter */
+}
+@media (max-width: 760px) {
+  .two-col { grid-template-columns: 1fr; }
+}
+
+/* Mini cards inside grid */
+.mini {
+  border: 1px solid #eef0f3;
+  border-radius: 12px;
+  padding: 10px;             /* tighter */
+  background: #fff;
+}
+
+/* Key/Value rows */
+.kv {
+  display: grid;
+  grid-template-columns: 140px 1fr; /* compact label width */
+  gap: 6px 10px;
+  align-items: start;
+}
+.kv .k { color: var(--muted); }
+.kv .v { word-break: break-word; }
+
+/* Order items table */
+.items-table {
+  width: 100%;
+  border-collapse: collapse;
+  border: 1px solid #eef0f3;
+  border-radius: 12px;
+  overflow: hidden;
+  font-size: 0.95rem;     /* compact */
+}
+.items-table th,
+.items-table td {
+  padding: 10px 10px;     /* tighter cells */
+  border-bottom: 1px solid #f1f3f5;
+  vertical-align: top;
+}
+.items-table thead th {
   background: #f6f7f9;
   font-weight: 700;
-  border-bottom: 1px solid #e5e7eb;
 }
-.items-body > .items-row:not(:last-child) {
-  border-bottom: 1px solid #f1f5f9;
-}
-.items-row .num { text-align: right; }
-
-/* Info grid + cards */
-.info-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(260px,1fr));
-  gap: 12px;
-}
-.info-card {
-  border: 1px solid #e5e7eb;
-  border-radius: 14px;
-  background: #fff;
-  box-shadow: var(--shadow-md);
-  padding: 14px;
-}
-.info-title { margin: 0 0 8px 0; font-size: 1rem; }
-.kv-list .kv { background: #fff; }
-
-/* Payment */
-.pay-card {
-  border: 1px dashed #e5e7eb;
-  border-radius: 14px;
-  padding: 12px;
-}
-.pay-row {
-  display: grid;
-  grid-template-columns: 120px 1fr;
-  align-items: start;
-  gap: 12px;
-}
-.pill {
-  display: inline-block;
-  padding: 6px 10px;
-  border-radius: 999px;
-  background: #eef2ff;
-  color: #3730a3;
+.items-table tfoot td {
+  background: #fafbfc;
   font-weight: 700;
+}
+
+/* Totals summary (right aligned numbers) */
+.totals {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 8px 12px;
+  margin-top: 8px;
+}
+.totals .label { color: var(--muted); }
+.totals .value { font-weight: 700; }
+
+/* Utilities */
+.is-hidden { display: none !important; }
+
+/* Small chips for method + amount */
+.chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 8px;
+  border: 1px solid #e5e7eb;
+  border-radius: 999px;
+  background: #f9fafb;
   font-size: 0.85rem;
 }
 
-/* Totals */
-.totals {
-  border: 1px solid #e5e7eb;
-  border-radius: 14px;
-  overflow: hidden;
-}
-.totals .line {
-  display: flex; align-items: center; justify-content: space-between;
-  padding: 12px 14px;
-  border-bottom: 1px solid #f1f5f9;
-}
-.totals .line:last-child { border-bottom: 0; }
-.totals .line .label { color: var(--muted); }
-.totals .line .value { font-weight: 700; }
-.totals .line.total { background:#f6f7f9; }
-
-/* Footer actions */
-.receipt-footer {
-  display: flex;
-  gap: 10px;
-  justify-content: flex-end;
-  margin-top: 14px;
-}
-#receipt_print_btn,
-#receipt_back_btn {
+/* Tiny divider space inside sections */
+.hr-compact {
   border: 0;
-  background: var(--primary);
-  color: var(--primary_fg);
-  padding: 10px 14px;
-  border-radius: 10px;
-  box-shadow: var(--shadow-md);
-}
-#receipt_back_btn { text-decoration: none; display: inline-flex; }
-
-/* Hide helper */
-.hide { display: none !important; }
-
-/* Responsive tweaks */
-@media (max-width: 560px) {
-  .items-row {
-    grid-template-columns: 1fr 64px 88px 100px;
-  }
+  border-top: 1px solid #f0f2f5;
+  margin: 10px 0;
 }
