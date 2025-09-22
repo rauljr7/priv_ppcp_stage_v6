@@ -11,6 +11,13 @@
   <link rel="stylesheet" href="assets/css/checkout.css">
   <script src="assets/js/website/loading.js"></script>
   <script>window.run_loading?.();</script>
+  <style>
+    paypal-button {
+      width: 100%;
+      max-width: 500px;
+	    margin-top: 10px;
+    }
+  </style>
 </head>
 <body id="app_root">
   <header id="site_header">
@@ -164,8 +171,8 @@
               <div class="section_body" id="payment_body">
                 <h3 id="wallets_heading" style="margin-top:0;">Digital Wallets</h3>
 
-                <div id="wallet_buttons" data-express-list>
-                  <button type="button" id="wallet_paypal_btn" data-express aria-label="PayPal">PayPal</button>
+                <div id="wallet_buttons">
+                  <paypal-button class="paypal-gold" data-express aria-label="PayPal"></paypal-button>
                   <button type="button" id="wallet_venmo_btn" data-express aria-label="Venmo">Venmo</button>
                   <button type="button" id="wallet_paylater_btn" data-express aria-label="Pay Later">Pay Later</button>
                   <button type="button" id="wallet_gpay_btn" data-express aria-label="Google Pay">Google&nbsp;Pay</button>
