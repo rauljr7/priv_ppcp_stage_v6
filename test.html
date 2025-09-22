@@ -4,7 +4,6 @@
     <title>One-Time Payment - Direct App Switch Flow - PayPal Web SDK</title>
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <style>
-      /* a selector must be used to target the custom element */
       paypal-button {
         width: 100%;
         max-width: 500px;
@@ -15,31 +14,31 @@
   <body>
     <h1>Paypal Direct App Switch Flow</h1>
     <div id="button-container">
-      <paypal-button id="paypal-button" hidden></paypal-button>
+      <paypal-button class="paypal-blue" id="paypal-button" hidden></paypal-button>
     </div>
     <script src="assets/js/paypal/utils.js" defer></script>
     <script>
       async function onPayPalWebSdkLoaded() {
-  try {
-    const clientToken = await getBrowserSafeClientToken();
-    const sdkInstance = await window.paypal.createInstance({
-      clientToken,
-      components: ["paypal-payments"],
-      pageType: "checkout",
-    });
-    const paypalPaymentSession = sdkInstance.createPayPalOneTimePaymentSession(
-      paymentSessionOptions,
-    );
+        try {
+          const clientToken = await getBrowserSafeClientToken();
+          const sdkInstance = await window.paypal.createInstance({
+            clientToken,
+            components: ["paypal-payments"],
+            pageType: "checkout",
+          });
+          const paypalPaymentSession = sdkInstance.createPayPalOneTimePaymentSession(
+            paymentSessionOptions,
+          );
 
-    if (paypalPaymentSession.hasReturned()) {
-      await paypalPaymentSession.resume();
-    } else {
-      setupPayPalButton(paypalPaymentSession);
-    }
-  } catch (error) {
-    console.error(error);
-  }
-}
+          if (paypalPaymentSession.hasReturned()) {
+            await paypalPaymentSession.resume();
+          } else {
+            setupPayPalButton(paypalPaymentSession);
+          }
+        } catch (error) {
+          console.error(error);
+        }
+      }
 
 const paymentSessionOptions = {
   async onApprove(data) {
