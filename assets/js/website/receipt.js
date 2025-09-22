@@ -4,6 +4,7 @@
 function $(sel) { return document.querySelector(sel); }
 function set(id, text) { const el = document.getElementById(id); if (el) el.textContent = text == null ? "" : String(text); }
 function showById(id, on = true) { const el = document.getElementById(id); if (!el) return; el.classList.toggle("hide", !on); }
+function toggleTwoCol(gridEl, on) { if (!gridEl) return; gridEl.classList.toggle("two-col", !!on); }
 function fmtMoney(v) { if (v == null) return "$0.00"; const n = typeof v === "string" ? parseFloat(v) : +v; return "$" + (isNaN(n) ? 0 : n).toFixed(2); }
 
 function joinCityStatePostal(a) {
@@ -13,6 +14,8 @@ function joinCityStatePostal(a) {
   const zip = a.postal_code || "";
   return [city, [state, zip].filter(Boolean).join(" ")].filter(Boolean).join(", ");
 }
+function hasAny(values) { return values.some(v => typeof v === "string" ? v.trim().length > 0 : !!v); }
+
 function getWebsiteSessionPU0() {
   try {
     const raw = localStorage.getItem("website_session");
@@ -20,9 +23,7 @@ function getWebsiteSessionPU0() {
     const ws = JSON.parse(raw);
     const pus = ws && ws.basket && Array.isArray(ws.basket.purchase_units) ? ws.basket.purchase_units : [];
     return pus && pus[0] ? pus[0] : null;
-  } catch (e) {
-    return null;
-  }
+  } catch (_) { return null; }
 }
 
 /* ========= Items from website_session ========= */
@@ -33,11 +34,7 @@ function renderItemsFromSession() {
 
   const pu0 = getWebsiteSessionPU0();
   const it = pu0 && Array.isArray(pu0.items) ? pu0.items[0] : null;
-
-  if (!pu0 || !it) {
-    // nothing to render
-    return;
-  }
+  if (!pu0 || !it) return;
 
   const name = it.name || "Item";
   const qty = Math.max(1, parseInt(it.quantity || "1", 10) || 1);
@@ -67,6 +64,14 @@ function fillAddresses(tx) {
   set("billing_city_state_postal", joinCityStatePostal(billingAddr) || "—");
   set("billing_country", billingAddr?.country_code || "—");
 
+  const hasBilling = hasAny([
+    billingName,
+    billingAddr?.address_line_1,
+    joinCityStatePostal(billingAddr),
+    billingAddr?.country_code
+  ]);
+  showById("section_billing", hasBilling);
+
   const pu0 = Array.isArray(tx?.purchase_units) ? tx.purchase_units[0] : null;
   const ship = pu0?.shipping || null;
   const shipName = ship?.name?.full_name || "";
@@ -83,33 +88,57 @@ function fillAddresses(tx) {
     if (chosen) method = chosen.label || chosen.id || "—";
   }
   set("shipping_method", method);
+
+  const hasShipping = hasAny([
+    shipName,
+    shipAddr?.address_line_1,
+    joinCityStatePostal(shipAddr),
+    shipAddr?.country_code,
+    method && method !== "—"
+  ]);
+  showById("section_shipping", hasShipping);
+
+  const addrGrid = document.querySelector("#section_address_grid .info-grid");
+  toggleTwoCol(addrGrid, hasBilling && hasShipping);
+
+  return { hasBilling, hasShipping };
 }
 
 function fillBuyer(tx) {
   const name = tx?.payer?.name ? [tx.payer.name.given_name, tx.payer.name.surname].filter(Boolean).join(" ") : "";
   const email = tx?.payer?.email_address || "";
   const phone = tx?.payer?.phone?.phone_number?.national_number || "";
+
   set("buyer_name", name || "—");
   set("buyer_email", email || "—");
   set("buyer_phone", phone || "—");
+
+  const hasBuyer = hasAny([name, email, phone]);
+  showById("section_buyer", hasBuyer);
+  return hasBuyer;
 }
 
 function fillPayment(tx) {
   const ps = tx?.payment_source || {};
+  let hasPayment = false;
+
   if (ps.paypal) {
     set("pp_email", ps.paypal.email_address || "—");
     set("pp_account_id", ps.paypal.account_id || "—");
     set("pp_account_status", ps.paypal.account_status || "—");
     showById("payment_paypal", true);
+    hasPayment = true;
   } else {
     showById("payment_paypal", false);
   }
+
+  showById("section_payment", hasPayment);
+  return hasPayment;
 }
 
 function fillOrderMeta(tx) {
   set("order_id_value", tx?.id || "—");
 
-  // Try capture create time, else now
   const pu0 = Array.isArray(tx?.purchase_units) ? tx.purchase_units[0] : null;
   const cap = pu0?.payments?.captures?.[0];
   const iso = cap?.create_time || new Date().toISOString();
@@ -143,8 +172,13 @@ window.receipt = {
   setTransaction: function (tx) {
     fillOrderMeta(tx);
     fillAddresses(tx);
-    fillBuyer(tx);
-    fillPayment(tx);
+    const hasBuyer = fillBuyer(tx);
+    const hasPayment = fillPayment(tx);
+
+    // Collapse/expand Buyer & Payment columns
+    const bpGrid = document.querySelector("#section_buyer_payment .info-grid");
+    toggleTwoCol(bpGrid, hasBuyer && hasPayment);
+
     renderItemsFromSession();  // items always from website_session
     fillTotalsFromSession();   // totals from website_session
   },
