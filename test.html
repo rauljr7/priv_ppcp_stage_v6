@@ -11,7 +11,7 @@
     </style>
   </head>
   <body>
-    <paypal-button class="paypal-blue" id="paypal-button"></paypal-button>
+    <paypal-button class="paypal-blue"></paypal-button>
     <script src="assets/js/paypal/utils.js" defer></script>
     <script defer>
       async function onPayPalWebSdkLoaded() {
@@ -53,21 +53,24 @@
       };
 
       async function setupPayPalButton(paypalPaymentSession) {
-        const paypalButton = document.querySelector("#paypal-button");
+        const paypalButton = document.querySelector("[paypal-button]");
 
-        paypalButton.addEventListener("click", async () => {
-          const createOrderIdPromiseReference = createOrder();
-          try {
-            await paypalPaymentSession.start(
-              { presentationMode: "direct-app-switch" },
-              createOrderIdPromiseReference,
-            );
-          } catch (error) {
-            console.error(error);
-            await paypalPaymentSession.start(
-              { presentationMode: "auto" },
-              createOrderIdPromiseReference,
-            );
+        document.addEventListener("click", async (event) => {
+          console.log(event.target.tagName);
+          if (event.target.tagName === "paypal-button") {
+            const createOrderIdPromiseReference = createOrder();
+            try {
+              await paypalPaymentSession.start(
+                { presentationMode: "direct-app-switch" },
+                createOrderIdPromiseReference,
+              );
+            } catch (error) {
+              console.error(error);
+              await paypalPaymentSession.start(
+                { presentationMode: "auto" },
+                createOrderIdPromiseReference,
+              );
+            }
           }
         });
       }
