@@ -1,123 +1,107 @@
-/* Scope styling to the receipt page only */
-body#receipt_page {
-  font-size: 14px;          /* smaller text */
-  line-height: 1.35;        /* tighter line-height */
-}
-
-/* Main wrapper */
-#receipt_wrap {
-  max-width: 920px;
-  margin: 24px auto;
-  padding: 0 12px;
+/* Scope to receipt card */
+.receipt-wrapper {
+  font-size: 14px;
+  line-height: 1.35;
 }
 
 /* Card */
 .receipt-card {
   background: #fff;
-  border-radius: 18px;       /* rounded corners */
+  border-radius: 18px;
   box-shadow: var(--shadow-lg);
-  padding: 16px 16px;        /* tighter */
+  padding: 16px;
 }
 
-/* Headline */
-#receipt_title {
-  font-size: 1.35rem;        /* compact title */
-  margin: 0 0 8px 0;
-}
-
-/* Top bar (id + status) */
-#receipt_top_meta {
+/* Header */
+.receipt-header {
   display: flex;
   flex-wrap: wrap;
-  gap: 8px 12px;
+  gap: 10px 16px;
   align-items: center;
   justify-content: space-between;
-  margin-bottom: 12px;
+  margin-bottom: 10px;
 }
-
-#receipt_order_id {
-  font-weight: 700;
+.receipt-title-wrap {
+  display: flex;
+  align-items: center;
+  gap: 10px;
 }
-
-.badge {
+#receipt_title { margin: 0; font-size: 1.3rem; }
+.status-badge {
   display: inline-flex;
   align-items: center;
-  gap: 6px;
-  border: 1px solid #e5e7eb;
-  padding: 4px 8px;
+  padding: 4px 10px;
   border-radius: 999px;
-  font-size: 0.85rem;
+  font-size: 0.8rem;
+  border: 1px solid #e5e7eb;
   background: #f9fafb;
 }
+.status-success { background: #dcfce7; border-color: #86efac; color: #065f46; }
+.status-pending { background: #fef9c3; border-color: #fde68a; color: #78350f; }
+.status-failed  { background: #fee2e2; border-color: #fecaca; color: #7f1d1d; }
 
-/* Section */
+.receipt-meta .kv { margin: 0; }
+
+/* Sections */
 .section {
   border: 1px solid #eef0f3;
   border-radius: 14px;
-  padding: 12px;             /* tighter */
-  margin: 10px 0;            /* tighter */
+  padding: 12px;
+  margin: 10px 0;
   background: #fff;
 }
-
 .section-title {
   font-size: 1.05rem;
   font-weight: 700;
   margin: 0 0 8px 0;
 }
 
-/* Two-column grids (addresses, buyer/payment, etc.) */
-.two-col {
+/* Grid */
+.info-grid {
   display: grid;
+  gap: 10px;
+}
+.info-grid.two-col {
   grid-template-columns: 1fr 1fr;
-  gap: 10px;                 /* tighter */
 }
 @media (max-width: 760px) {
-  .two-col { grid-template-columns: 1fr; }
+  .info-grid.two-col { grid-template-columns: 1fr; }
 }
 
-/* Mini cards inside grid */
-.mini {
+.info-card {
   border: 1px solid #eef0f3;
   border-radius: 12px;
-  padding: 10px;             /* tighter */
+  padding: 10px;
   background: #fff;
 }
+.info-card.padless { padding: 8px; }
+.info-title { margin: 0 0 6px 0; font-size: 1rem; }
 
-/* Key/Value rows */
+/* Key/Value */
 .kv {
   display: grid;
-  grid-template-columns: 140px 1fr; /* compact label width */
+  grid-template-columns: 140px 1fr;
   gap: 6px 10px;
   align-items: start;
+  margin: 0 0 4px 0;
 }
 .kv .k { color: var(--muted); }
 .kv .v { word-break: break-word; }
 
-/* Order items table */
-.items-table {
-  width: 100%;
-  border-collapse: collapse;
-  border: 1px solid #eef0f3;
-  border-radius: 12px;
-  overflow: hidden;
-  font-size: 0.95rem;     /* compact */
-}
-.items-table th,
-.items-table td {
-  padding: 10px 10px;     /* tighter cells */
+/* Items sheet (div-based table) */
+.items-sheet { width: 100%; border: 1px solid #eef0f3; border-radius: 12px; overflow: hidden; }
+.items-row {
+  display: grid;
+  grid-template-columns: 2fr 0.6fr 1fr 1fr; /* Item | Qty | Unit | Subtotal */
+  gap: 8px 10px;
+  padding: 10px;
   border-bottom: 1px solid #f1f3f5;
-  vertical-align: top;
 }
-.items-table thead th {
-  background: #f6f7f9;
-  font-weight: 700;
-}
-.items-table tfoot td {
-  background: #fafbfc;
-  font-weight: 700;
-}
+.items-row .num { text-align: right; }
+.items-head { background: #f6f7f9; font-weight: 700; }
+.items-body .items-row:last-child { border-bottom: 0; }
 
-/* Totals summary (right aligned numbers) */
+/* Totals */
 .totals {
   display: grid;
   grid-template-columns: 1fr auto;
@@ -126,25 +110,30 @@ body#receipt_page {
 }
 .totals .label { color: var(--muted); }
 .totals .value { font-weight: 700; }
+.totals .total .value { font-size: 1.1rem; }
 
-/* Utilities */
-.is-hidden { display: none !important; }
-
-/* Small chips for method + amount */
-.chip {
+/* Payment pill */
+.pill {
   display: inline-flex;
   align-items: center;
-  gap: 6px;
-  padding: 4px 8px;
-  border: 1px solid #e5e7eb;
+  padding: 3px 8px;
   border-radius: 999px;
-  background: #f9fafb;
-  font-size: 0.85rem;
+  border: 1px solid #e5e7eb;
+  background: #f3f4f6;
+  font-size: 0.8rem;
 }
 
-/* Tiny divider space inside sections */
-.hr-compact {
-  border: 0;
-  border-top: 1px solid #f0f2f5;
-  margin: 10px 0;
+.pay-card { border: 1px solid #eef0f3; border-radius: 12px; padding: 10px; background: #fff; }
+.pay-row { display: flex; gap: 12px; align-items: flex-start; }
+.pay-brand { min-width: 88px; }
+
+/* Utilities */
+.hide, .is-hidden { display: none !important; }
+
+/* Footer actions */
+.receipt-footer {
+  display: flex;
+  gap: 10px;
+  justify-content: flex-end;
+  margin-top: 10px;
 }

@@ -40,7 +40,7 @@
           <header class="receipt-header">
             <div class="receipt-title-wrap">
               <h1 id="receipt_title">Receipt</h1>
-              <span id="receipt_status_badge" class="status-badge status-pending">Pending</span>
+              <span id="receipt_status_badge" class="status-badge status-pending">PENDING</span>
             </div>
             <div class="receipt-meta">
               <div class="kv">
@@ -63,14 +63,12 @@
                 <div role="columnheader" class="num">Unit</div>
                 <div role="columnheader" class="num">Subtotal</div>
               </div>
-              <div id="items_tbody" class="items-body" role="rowgroup">
-                <!-- rows inserted by JS -->
-              </div>
+              <div id="items_tbody" class="items-body" role="rowgroup"></div>
             </div>
           </section>
 
           <section id="section_address_grid" class="section">
-            <div class="info-grid">
+            <div class="info-grid two-col">
               <div id="section_billing" class="info-card" data-section="billing">
                 <h3 class="info-title">Billing Address</h3>
                 <div class="kv-list">
@@ -94,89 +92,40 @@
             </div>
           </section>
 
-          <section id="section_buyer" class="section">
-            <h2 class="section-title">Buyer</h2>
-            <div class="info-grid">
-              <div class="info-card">
+          <!-- Buyer + Payment side by side -->
+          <section id="section_buyer_payment" class="section">
+            <h2 class="section-title">Buyer & Payment</h2>
+            <div class="info-grid two-col">
+              <div id="section_buyer" class="info-card">
+                <h3 class="info-title">Buyer</h3>
                 <div class="kv-list">
                   <div class="kv"><span class="k">Name</span><span id="buyer_name" class="v">—</span></div>
                   <div class="kv"><span class="k">Email</span><span id="buyer_email" class="v">—</span></div>
                   <div class="kv"><span class="k">Phone</span><span id="buyer_phone" class="v">—</span></div>
                 </div>
               </div>
-            </div>
-          </section>
 
-          <section id="section_payment" class="section">
-            <h2 class="section-title">Payment</h2>
+              <div id="section_payment" class="info-card padless">
+                <h3 class="info-title">Payment</h3>
 
-            <!-- PayPal -->
-            <div id="payment_paypal" class="pay-card">
-              <div class="pay-row">
-                <div class="pay-brand">
-                  <span class="pill">PayPal</span>
+                <!-- PayPal -->
+                <div id="payment_paypal" class="pay-card">
+                  <div class="pay-row">
+                    <div class="pay-brand">
+                      <span class="pill">PayPal</span>
+                    </div>
+                    <div class="pay-meta">
+                      <div class="kv"><span class="k">Email</span><span id="pp_email" class="v">—</span></div>
+                      <div class="kv"><span class="k">Account ID</span><span id="pp_account_id" class="v">—</span></div>
+                      <div class="kv"><span class="k">Status</span><span id="pp_account_status" class="v">—</span></div>
+                    </div>
+                  </div>
                 </div>
-                <div class="pay-meta">
-                  <div class="kv"><span class="k">Email</span><span id="pp_email" class="v">—</span></div>
-                  <div class="kv"><span class="k">Account ID</span><span id="pp_account_id" class="v">—</span></div>
-                  <div class="kv"><span class="k">Status</span><span id="pp_account_status" class="v">—</span></div>
-                </div>
+
+                <!-- Other payment types can be added here, hidden by default -->
+                <!-- <div id="payment_card" class="pay-card hide">…</div> -->
               </div>
             </div>
-
-            <!-- Card (example; hidden by default)
-            <div id="payment_card" class="pay-card hide">
-              <div class="pay-row">
-                <div class="pay-brand">
-                  <span class="pill">Card</span>
-                </div>
-                <div class="pay-meta">
-                  <div class="kv"><span class="k">Brand</span><span id="card_brand" class="v">Visa</span></div>
-                  <div class="kv"><span class="k">Last 4</span><span id="card_last4" class="v">4242</span></div>
-                  <div class="kv"><span class="k">Expiry</span><span id="card_expiry" class="v">10/28</span></div>
-                </div>
-              </div>
-            </div>
-            -->
-
-            <!-- Apple Pay (example; hidden by default)
-            <div id="payment_applepay" class="pay-card hide">
-              <div class="pay-row">
-                <div class="pay-brand">
-                  <span class="pill">Apple&nbsp;Pay</span>
-                </div>
-                <div class="pay-meta">
-                  <div class="kv"><span class="k">Device</span><span id="ap_device" class="v">—</span></div>
-                </div>
-              </div>
-            </div>
-            -->
-
-            <!-- Google Pay (example; hidden by default)
-            <div id="payment_gpay" class="pay-card hide">
-              <div class="pay-row">
-                <div class="pay-brand">
-                  <span class="pill">Google&nbsp;Pay</span>
-                </div>
-                <div class="pay-meta">
-                  <div class="kv"><span class="k">Account</span><span id="gp_account" class="v">—</span></div>
-                </div>
-              </div>
-            </div>
-            -->
-
-            <!-- Venmo (example; hidden by default)
-            <div id="payment_venmo" class="pay-card hide">
-              <div class="pay-row">
-                <div class="pay-brand">
-                  <span class="pill">Venmo</span>
-                </div>
-                <div class="pay-meta">
-                  <div class="kv"><span class="k">Username</span><span id="venmo_username" class="v">@username</span></div>
-                </div>
-              </div>
-            </div>
-            -->
           </section>
 
           <section id="section_totals" class="section">
@@ -218,10 +167,5 @@
   </footer>
 
   <script src="assets/js/website/receipt.js" defer></script>
-
-  <script>
-    // Optional: drop your transaction payload on the page to auto-hydrate
-    // window.transaction_payload = { ...sample from your message... };
-  </script>
 </body>
 </html>
