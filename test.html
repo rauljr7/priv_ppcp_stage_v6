@@ -31,6 +31,7 @@
       components: ["paypal-payments"],
       pageType: "checkout",
     });
+    console.log(sdkInstance);
     const paypalPaymentSession = sdkInstance.createPayPalOneTimePaymentSession(
       paymentSessionOptions,
     );
@@ -38,7 +39,6 @@
     if (paypalPaymentSession.hasReturned()) {
       await paypalPaymentSession.resume();
     } else {
-      console.log("es");
       setupPayPalButton(paypalPaymentSession);
     }
   } catch (error) {
