@@ -767,70 +767,51 @@ function set_session_basket(basket_patch) {
 }
 
 function sanitize_purchase_unit_array(units_array) {
-  if (Array.isArray(units_array) !== true) {
-    return [];
-  }
+  if (Array.isArray(units_array) !== true) return [];
 
-  function is_nonempty_string(v) {
-    return (typeof v === "string" && v.trim().length > 0);
-  }
-
-  function only_digits(str) {
-    return String(str == null ? "" : str).replace(/\D+/g, "");
-  }
-
-  function is_valid_email(email) {
-    // Lightweight email sanity check (good enough for client-side hygiene)
-    return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(String(email || ""));
-  }
-
-  function normalize_country_code(cc) {
-    // E.164 country code: 1–3 digits (no +)
-    var d = only_digits(cc);
-    if (/^\d{1,3}$/.test(d)) {
-      return d;
+  function is_nonempty_string(v) { return (typeof v === "string" && v.trim().length > 0); }
+  function only_digits(str) { return String(str == null ? "" : str).replace(/\D+/g, ""); }
+  function is_valid_email(email) { return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(String(email || "")); }
+  function normalize_country_code(cc) { var d = only_digits(cc); return (/^\d{1,3}$/).test(d) ? d : ""; }
+  function normalize_national_number(nn) { var d = only_digits(nn); return (d.length >= 7 && d.length <= 15) ? d : ""; }
+  function address_has_any(a) {
+    if (!a || typeof a !== "object") return false;
+    var keys = ["address_line_1","address_line_2","admin_area_2","admin_area_1","postal_code","country_code"];
+    for (var k = 0; k < keys.length; k++) {
+      if (is_nonempty_string(a[keys[k]])) return true;
     }
-    return "";
-  }
-
-  function normalize_national_number(nn) {
-    var d = only_digits(nn);
-    if (d.length >= 7 && d.length <= 15) {
-      return d;
-    }
-    return "";
+    return false;
   }
 
   var out = [];
-
   for (var i = 0; i < units_array.length; i++) {
     var unit = JSON.parse(JSON.stringify(units_array[i] || {}));
 
     if (unit && unit.shipping) {
-      if (!is_nonempty_string(unit.shipping.email_address) || !is_valid_email(unit.shipping.email_address)) {
-        // remove invalid / empty email
-        if (unit.shipping.hasOwnProperty("email_address")) {
-          delete unit.shipping.email_address;
+      var addr = unit.shipping.address || {};
+      var a1_empty = !is_nonempty_string(addr.address_line_1);
+      var addr_incomplete = !address_has_any(addr);
+      if (a1_empty || addr_incomplete) {
+        delete unit.shipping;
+      } else {
+        if (!is_nonempty_string(unit.shipping.email_address) || !is_valid_email(unit.shipping.email_address)) {
+          if (unit.shipping.hasOwnProperty("email_address")) delete unit.shipping.email_address;
         }
-      }
-
-      if (unit.shipping.hasOwnProperty("phone_number") && unit.shipping.phone_number) {
-        var cc = normalize_country_code(unit.shipping.phone_number.country_code);
-        var nn = normalize_national_number(unit.shipping.phone_number.national_number);
-
-        if (is_nonempty_string(cc) && is_nonempty_string(nn)) {
-          unit.shipping.phone_number.country_code = cc;
-          unit.shipping.phone_number.national_number = nn;
-        } else {
-          // Remove entire phone_number object if either part is missing/invalid
-          delete unit.shipping.phone_number;
+        if (unit.shipping.hasOwnProperty("phone_number") && unit.shipping.phone_number) {
+          var cc = normalize_country_code(unit.shipping.phone_number.country_code);
+          var nn = normalize_national_number(unit.shipping.phone_number.national_number);
+          if (is_nonempty_string(cc) && is_nonempty_string(nn)) {
+            unit.shipping.phone_number.country_code = cc;
+            unit.shipping.phone_number.national_number = nn;
+          } else {
+            delete unit.shipping.phone_number;
+          }
         }
       }
     }
 
     out.push(unit);
   }
-
   return out;
 }
 
