@@ -767,6 +767,74 @@ function set_session_basket(basket_patch) {
   });
 }
 
+function sanitize_purchase_unit_array(units_array) {
+  if (Array.isArray(units_array) !== true) {
+    return [];
+  }
+
+  function is_nonempty_string(v) {
+    return (typeof v === "string" && v.trim().length > 0);
+  }
+
+  function only_digits(str) {
+    return String(str == null ? "" : str).replace(/\D+/g, "");
+  }
+
+  function is_valid_email(email) {
+    // Lightweight email sanity check (good enough for client-side hygiene)
+    return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(String(email || ""));
+  }
+
+  function normalize_country_code(cc) {
+    // E.164 country code: 1–3 digits (no +)
+    var d = only_digits(cc);
+    if (/^\d{1,3}$/.test(d)) {
+      return d;
+    }
+    return "";
+  }
+
+  function normalize_national_number(nn) {
+    var d = only_digits(nn);
+    if (d.length >= 7 && d.length <= 15) {
+      return d;
+    }
+    return "";
+  }
+
+  var out = [];
+
+  for (var i = 0; i < units_array.length; i++) {
+    var unit = JSON.parse(JSON.stringify(units_array[i] || {}));
+
+    if (unit && unit.shipping) {
+      if (!is_nonempty_string(unit.shipping.email_address) || !is_valid_email(unit.shipping.email_address)) {
+        // remove invalid / empty email
+        if (unit.shipping.hasOwnProperty("email_address")) {
+          delete unit.shipping.email_address;
+        }
+      }
+
+      if (unit.shipping.hasOwnProperty("phone_number") && unit.shipping.phone_number) {
+        var cc = normalize_country_code(unit.shipping.phone_number.country_code);
+        var nn = normalize_national_number(unit.shipping.phone_number.national_number);
+
+        if (is_nonempty_string(cc) && is_nonempty_string(nn)) {
+          unit.shipping.phone_number.country_code = cc;
+          unit.shipping.phone_number.national_number = nn;
+        } else {
+          // Remove entire phone_number object if either part is missing/invalid
+          delete unit.shipping.phone_number;
+        }
+      }
+    }
+
+    out.push(unit);
+  }
+
+  return out;
+}
+
 function set_session_basket_purchase_units(units_array) {
   return new Promise(function (resolve) {
     ensure_website_session();
@@ -774,7 +842,9 @@ function set_session_basket_purchase_units(units_array) {
       window.website_session.basket = {};
     }
     if (Array.isArray(units_array) === true) {
-      window.website_session.basket.purchase_units = units_array;
+      // Sanitize before persisting
+      var clean_units = sanitize_purchase_unit_array(units_array);
+      window.website_session.basket.purchase_units = clean_units;
     }
     persist_session_to_storage(window.website_session);
     resolve(get_session_basket_purchase_units());
