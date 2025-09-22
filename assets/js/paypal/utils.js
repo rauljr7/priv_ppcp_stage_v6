@@ -1,8 +1,9 @@
-async function getBrowserSafeClientToken() {
-   let base_url = "https://faas-sfo3-7872a1dd.doserverless.co/api/v1/web/fn-2b157b93-6e85-4f0d-b040-eccd1b257eef/default/ppcp-v6-endpoints";
-   let url = base_url + "?method=client_token";
+const get_client_token_endpoint = "https://faas-sfo3-7872a1dd.doserverless.co/api/v1/web/fn-2b157b93-6e85-4f0d-b040-eccd1b257eef/default/ppcp-v6-endpoints?method=client_token";
+const create_order_endpoint = "https://faas-sfo3-7872a1dd.doserverless.co/api/v1/web/fn-2b157b93-6e85-4f0d-b040-eccd1b257eef/default/ppcp-v6-endpoints?method=create_order";
+const capture_order_endpoint = "https://faas-sfo3-7872a1dd.doserverless.co/api/v1/web/fn-2b157b93-6e85-4f0d-b040-eccd1b257eef/default/ppcp-v6-endpoints?method=capture_order";
 
-   return fetch(url, {
+async function getBrowserSafeClientToken() {
+   return fetch(get_client_token_endpoint, {
       method: "GET",
       mode: "cors"
    }).then(function (res) {
@@ -26,10 +27,8 @@ async function createOrder() {
         intent: "CAPTURE"
     };
     orderPayload.purchase_units = local_storage_website_session.basket.purchase_units;
-  let base_url = "https://faas-sfo3-7872a1dd.doserverless.co/api/v1/web/fn-2b157b93-6e85-4f0d-b040-eccd1b257eef/default/ppcp-v6-endpoints";
-  let url = base_url + "?method=create_order";
 
-  let resp = await fetch(url, {
+  let resp = await fetch(create_order_endpoint, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     mode: "cors",
@@ -38,4 +37,17 @@ async function createOrder() {
 
   let data = await resp.json();
   return { orderId: data && typeof data.id === "string" ? data.id : "" };
+}
+
+async function captureOrder({ orderId }) {
+  const response = await fetch(capture_order_endpoint, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json"
+    },
+    body: JSON.stringify({ id: orderId })
+  });
+
+  const data = await response.json();
+  return data;
 }
