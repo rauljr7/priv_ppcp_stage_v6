@@ -227,16 +227,6 @@ hr[data-label]::before {
 	white-space: nowrap;
 }
 
-[data-express] {
-	border: 1px solid #e5e7eb;
-	background: #fff;
-	padding: 12px 14px;
-	border-radius: var(--radius);
-	box-shadow: var(--shadow-md);
-	text-align: center;
-	font-weight: 700;
-}
-
 select {
 	-webkit-appearance: none;
 	-moz-appearance: none;
