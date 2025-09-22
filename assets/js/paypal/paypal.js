@@ -42,7 +42,7 @@ async function setupPayPalButton(paypalPaymentSession) {
    paypalButton.removeAttribute("hidden");
 
    paypalButton.addEventListener("click", async () => {
-      const createOrderPromiseReference = createRedirectOrder();
+      const createOrderPromiseReference = createOrder();
 
       try {
          const {
@@ -73,54 +73,6 @@ async function setupPayPalButton(paypalPaymentSession) {
          );
       }
    });
-}
-
-
-
-async function createRedirectOrder() {
-   let orderPayload = {
-      intent: "CAPTURE",
-      paymentSource: {
-         paypal: {
-            experienceContext: {
-               shippingPreference: "NO_SHIPPING",
-               userAction: "CONTINUE",
-               returnUrl: window.location.href,
-               cancelUrl: window.location.href
-            }
-         }
-      },
-      purchaseUnits: [{
-         amount: {
-            currencyCode: "USD",
-            value: "10.00",
-            breakdown: {
-               itemTotal: {
-                  currencyCode: "USD",
-                  value: "10.00"
-               }
-            }
-         }
-      }]
-   };
-
-   let body = map_order_payload_to_paypal(orderPayload);
-   let base_url = "https://faas-sfo3-7872a1dd.doserverless.co/api/v1/web/fn-2b157b93-6e85-4f0d-b040-eccd1b257eef/default/ppcp-v6-endpoints";
-   let url = base_url + "?method=create_order";
-
-   let resp = await fetch(url, {
-      method: "POST",
-      headers: {
-         "Content-Type": "application/json"
-      },
-      mode: "cors",
-      body: JSON.stringify(body)
-   });
-
-   let data = await resp.json();
-   return {
-      orderId: data && typeof data.id === "string" ? data.id : ""
-   };
 }
 
 function map_order_payload_to_paypal(src) {

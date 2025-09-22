@@ -14,10 +14,6 @@
 
   <body>
     <h1>Paypal Direct App Switch Flow</h1>
-    <div>
-      <input type="checkbox" id="enable-auto-redirect" checked />
-      <label for="enable-auto-redirect"> Enable auto-redirect </label>
-    </div>
     <div id="button-container">
       <paypal-button id="paypal-button" hidden></paypal-button>
     </div>
@@ -67,16 +63,10 @@ async function setupPayPalButton(paypalPaymentSession) {
   paypalButton.removeAttribute("hidden");
 
   paypalButton.addEventListener("click", async () => {
-    const createOrderPromiseReference = createRedirectOrder();
-
+    const createOrderPromiseReference = createOrder();
     try {
       const { redirectURL } = await paypalPaymentSession.start(
-        {
-          presentationMode: "direct-app-switch",
-          autoRedirect: {
-            enabled: enableAutoRedirect.checked,
-          },
-        },
+        { presentationMode: "direct-app-switch" },
         createOrderPromiseReference,
       );
       if (redirectURL) {
@@ -86,12 +76,7 @@ async function setupPayPalButton(paypalPaymentSession) {
     } catch (error) {
       console.error(error);
       const { redirectURL } = await paypalPaymentSession.start(
-        {
-          presentationMode: "auto",
-          autoRedirect: {
-            enabled: enableAutoRedirect.checked,
-          },
-        },
+        { presentationMode: "auto" },
         createOrderPromiseReference,
       );
     }

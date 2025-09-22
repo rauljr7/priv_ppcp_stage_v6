@@ -20,7 +20,7 @@ async function getBrowserSafeClientToken() {
    });
 }
 
-async function createRedirectOrder() {
+async function createOrder() {
     let local_storage_website_session = JSON.parse(localStorage.getItem("website_session"));
     let orderPayload = {
         intent: "CAPTURE"
