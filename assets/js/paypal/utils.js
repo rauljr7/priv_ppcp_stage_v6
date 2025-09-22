@@ -31,9 +31,7 @@ async function createOrder() {
     orderPayload.purchase_units = local_storage_website_session.basket.purchase_units;
 
   let resp = await fetch(create_order_endpoint, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    mode: "cors",
+    method: "POST", headers: { "Content-Type": "application/json" }, mode: "cors",
     body: JSON.stringify(orderPayload)
   });
 
@@ -43,10 +41,7 @@ async function createOrder() {
 
 async function captureOrder({ orderId }) {
   const response = await fetch(capture_order_endpoint, {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json"
-    },
+    method: "POST", headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ id: orderId })
   });
 
