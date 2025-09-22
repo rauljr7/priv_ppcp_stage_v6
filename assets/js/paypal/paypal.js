@@ -33,6 +33,11 @@ const paymentSessionOptions = {
         });
 
     },
+    onClick() {
+        if (get_session_basket_purchase_units_items().length < 1) {
+            document.getElementById("add_to_cart_btn").click();
+        }
+    },
     onCancel(data) {
         console.log("onCancel", data);
     },

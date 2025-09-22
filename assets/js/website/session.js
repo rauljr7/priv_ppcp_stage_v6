@@ -966,3 +966,25 @@ window.set_session_shipping_methods = set_session_shipping_methods;
 window.set_session_transaction_payload = set_session_transaction_payload;
 window.set_session_purchase_unit_shipping_from_top_level = set_session_purchase_unit_shipping_from_top_level;
 window.clear_session = clear_session;
+document.addEventListener("DOMContentLoaded", function () {
+  try {
+    const stored = load_session_from_storage();
+    if (!is_plain_object(stored)) {
+      const sess = make_default_session();
+      // give it an id if missing
+      if (!sess.id) sess.id = "sess_" + Date.now();
+      // publish to globals + storage
+      window.website_session = sess;
+      if (typeof persist_session_to_storage === "function") {
+        persist_session_to_storage(sess);
+      } else {
+        localStorage.setItem("website_session", JSON.stringify(sess));
+      }
+    }
+  } catch (e) {
+    const fallback = make_default_session();
+    fallback.id = "sess_" + Date.now();
+    window.website_session = fallback;
+    try { persist_session_to_storage(fallback); } catch {}
+  }
+});
