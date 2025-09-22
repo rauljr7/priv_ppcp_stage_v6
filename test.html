@@ -25,13 +25,12 @@
     <script>
       async function onPayPalWebSdkLoaded() {
   try {
-    let clientToken = await getBrowserSafeClientToken();
-    let sdkInstance = await window.paypal.createInstance({
+    const clientToken = await getBrowserSafeClientToken();
+    const sdkInstance = await window.paypal.createInstance({
       clientToken,
       components: ["paypal-payments"],
       pageType: "checkout",
     });
-    console.log(sdkInstance);
     const paypalPaymentSession = sdkInstance.createPayPalOneTimePaymentSession(
       paymentSessionOptions,
     );
