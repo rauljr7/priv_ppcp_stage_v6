@@ -1,0 +1,227 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Receipt</title>
+  <link href="https://fonts.cdnfonts.com/css/br-shape" rel="stylesheet">
+  <link rel="stylesheet" href="assets/css/theme.css">
+  <link rel="stylesheet" href="assets/css/nav.css">
+  <link rel="stylesheet" href="assets/css/layout.css">
+  <link rel="stylesheet" href="assets/css/receipt.css">
+</head>
+<body id="app_root">
+  <header id="site_header">
+    <nav id="primary_nav">
+      <div class="container" aria-label="Primary">
+        <ul id="nav_links">
+          <li><a id="nav_home" href="index.html">Home</a></li>
+          <li><a id="nav_product" href="product.html">Product</a></li>
+          <li><a id="nav_cart" href="cart.html">Cart</a></li>
+          <li><a id="nav_checkout" href="checkout.html">Checkout</a></li>
+          <li><a id="nav_receipt" aria-current="page" href="receipt.html">Receipt</a></li>
+        </ul>
+
+        <a id="nav_cart_button" data-cart href="cart.html" aria-label="Open cart">
+          <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+            <path d="M7 4h-2l-1 2h2l2.6 7h8.7l2.3-6H9.4" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>
+            <circle cx="10" cy="20" r="1.6" fill="currentColor"/>
+            <circle cx="17" cy="20" r="1.6" fill="currentColor"/>
+          </svg>
+        </a>
+      </div>
+    </nav>
+  </header>
+
+  <main id="main_content">
+    <div class="container">
+      <section id="receipt_page" class="receipt-wrapper" aria-label="Receipt">
+        <article id="receipt_card" class="receipt-card" role="region" aria-labelledby="receipt_title">
+          <header class="receipt-header">
+            <div class="receipt-title-wrap">
+              <h1 id="receipt_title">Receipt</h1>
+              <span id="receipt_status_badge" class="status-badge status-pending">Pending</span>
+            </div>
+            <div class="receipt-meta">
+              <div class="kv">
+                <span class="k">Order ID</span>
+                <span id="order_id_value" class="v">—</span>
+              </div>
+              <div class="kv">
+                <span class="k">Date</span>
+                <span id="order_date_value" class="v">—</span>
+              </div>
+            </div>
+          </header>
+
+          <section id="section_items" class="section">
+            <h2 class="section-title">Order Items</h2>
+            <div class="items-sheet" role="table" aria-label="Purchased items">
+              <div class="items-row items-head" role="row">
+                <div role="columnheader">Item</div>
+                <div role="columnheader" class="num">Qty</div>
+                <div role="columnheader" class="num">Unit</div>
+                <div role="columnheader" class="num">Subtotal</div>
+              </div>
+              <div id="items_tbody" class="items-body" role="rowgroup">
+                <!-- rows inserted by JS -->
+              </div>
+            </div>
+          </section>
+
+          <section id="section_address_grid" class="section">
+            <div class="info-grid">
+              <div id="section_billing" class="info-card" data-section="billing">
+                <h3 class="info-title">Billing Address</h3>
+                <div class="kv-list">
+                  <div class="kv"><span class="k">Name</span><span id="billing_name" class="v">—</span></div>
+                  <div class="kv"><span class="k">Address</span><span id="billing_line1" class="v">—</span></div>
+                  <div class="kv"><span class="k">City/State/ZIP</span><span id="billing_city_state_postal" class="v">—</span></div>
+                  <div class="kv"><span class="k">Country</span><span id="billing_country" class="v">—</span></div>
+                </div>
+              </div>
+
+              <div id="section_shipping" class="info-card" data-section="shipping">
+                <h3 class="info-title">Shipping Address</h3>
+                <div class="kv-list">
+                  <div class="kv"><span class="k">Name</span><span id="shipping_name" class="v">—</span></div>
+                  <div class="kv"><span class="k">Address</span><span id="shipping_line1" class="v">—</span></div>
+                  <div class="kv"><span class="k">City/State/ZIP</span><span id="shipping_city_state_postal" class="v">—</span></div>
+                  <div class="kv"><span class="k">Country</span><span id="shipping_country" class="v">—</span></div>
+                  <div class="kv"><span class="k">Method</span><span id="shipping_method" class="v">—</span></div>
+                </div>
+              </div>
+            </div>
+          </section>
+
+          <section id="section_buyer" class="section">
+            <h2 class="section-title">Buyer</h2>
+            <div class="info-grid">
+              <div class="info-card">
+                <div class="kv-list">
+                  <div class="kv"><span class="k">Name</span><span id="buyer_name" class="v">—</span></div>
+                  <div class="kv"><span class="k">Email</span><span id="buyer_email" class="v">—</span></div>
+                  <div class="kv"><span class="k">Phone</span><span id="buyer_phone" class="v">—</span></div>
+                </div>
+              </div>
+            </div>
+          </section>
+
+          <section id="section_payment" class="section">
+            <h2 class="section-title">Payment</h2>
+
+            <!-- PayPal -->
+            <div id="payment_paypal" class="pay-card">
+              <div class="pay-row">
+                <div class="pay-brand">
+                  <span class="pill">PayPal</span>
+                </div>
+                <div class="pay-meta">
+                  <div class="kv"><span class="k">Email</span><span id="pp_email" class="v">—</span></div>
+                  <div class="kv"><span class="k">Account ID</span><span id="pp_account_id" class="v">—</span></div>
+                  <div class="kv"><span class="k">Status</span><span id="pp_account_status" class="v">—</span></div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Card (example; hidden by default)
+            <div id="payment_card" class="pay-card hide">
+              <div class="pay-row">
+                <div class="pay-brand">
+                  <span class="pill">Card</span>
+                </div>
+                <div class="pay-meta">
+                  <div class="kv"><span class="k">Brand</span><span id="card_brand" class="v">Visa</span></div>
+                  <div class="kv"><span class="k">Last 4</span><span id="card_last4" class="v">4242</span></div>
+                  <div class="kv"><span class="k">Expiry</span><span id="card_expiry" class="v">10/28</span></div>
+                </div>
+              </div>
+            </div>
+            -->
+
+            <!-- Apple Pay (example; hidden by default)
+            <div id="payment_applepay" class="pay-card hide">
+              <div class="pay-row">
+                <div class="pay-brand">
+                  <span class="pill">Apple&nbsp;Pay</span>
+                </div>
+                <div class="pay-meta">
+                  <div class="kv"><span class="k">Device</span><span id="ap_device" class="v">—</span></div>
+                </div>
+              </div>
+            </div>
+            -->
+
+            <!-- Google Pay (example; hidden by default)
+            <div id="payment_gpay" class="pay-card hide">
+              <div class="pay-row">
+                <div class="pay-brand">
+                  <span class="pill">Google&nbsp;Pay</span>
+                </div>
+                <div class="pay-meta">
+                  <div class="kv"><span class="k">Account</span><span id="gp_account" class="v">—</span></div>
+                </div>
+              </div>
+            </div>
+            -->
+
+            <!-- Venmo (example; hidden by default)
+            <div id="payment_venmo" class="pay-card hide">
+              <div class="pay-row">
+                <div class="pay-brand">
+                  <span class="pill">Venmo</span>
+                </div>
+                <div class="pay-meta">
+                  <div class="kv"><span class="k">Username</span><span id="venmo_username" class="v">@username</span></div>
+                </div>
+              </div>
+            </div>
+            -->
+          </section>
+
+          <section id="section_totals" class="section">
+            <h2 class="section-title">Totals</h2>
+            <div class="totals">
+              <div class="line">
+                <span class="label">Items</span>
+                <span id="item_total_value" class="value">$0.00</span>
+              </div>
+              <div class="line">
+                <span class="label">Shipping</span>
+                <span id="shipping_total_value" class="value">$0.00</span>
+              </div>
+              <div class="line total">
+                <span class="label">Order Total</span>
+                <span id="order_total_value" class="value">$0.00</span>
+              </div>
+            </div>
+          </section>
+
+          <footer class="receipt-footer">
+            <button id="receipt_print_btn" type="button">Print</button>
+            <a id="receipt_back_btn" href="index.html" role="button">Back to store</a>
+          </footer>
+        </article>
+      </section>
+    </div>
+  </main>
+
+  <footer id="site_footer">
+    <div class="container">
+      <div id="footer_copyright">© Acme Co.</div>
+      <nav aria-label="Legal" id="footer_legal_nav">
+        <a id="footer_privacy" href="#">Privacy</a>
+        <a id="footer_terms" href="#">Terms</a>
+        <a id="footer_legal" href="#">Legal</a>
+      </nav>
+    </div>
+  </footer>
+
+  <script src="assets/js/website/receipt.js" defer></script>
+
+  <script>
+    // Optional: drop your transaction payload on the page to auto-hydrate
+    // window.transaction_payload = { ...sample from your message... };
+  </script>
+</body>
+</html>
