@@ -9,7 +9,8 @@
   <link rel="stylesheet" href="assets/css/nav.css">
   <link rel="stylesheet" href="assets/css/layout.css">
   <link rel="stylesheet" href="assets/css/checkout.css">
-  <script src="assets/js/website/loading.js" defer></script>
+  <script src="assets/js/website/loading.js"></script>
+  <script>window.run_loading?.();</script>
 </head>
 <body id="app_root">
   <header id="site_header">
@@ -233,5 +234,8 @@
   <script src="assets/js/website/session.js" defer></script>
   <script src="assets/js/website/website_options.js" defer></script>
   <script src="assets/js/website/checkout.js" defer></script>
+  <script src="assets/js/paypal/utils.js" defer></script>
+  <script src="assets/js/paypal/paypal.js" defer></script>
+  <script src="https://www.sandbox.paypal.com/web-sdk/v6/core" onload="onPayPalWebSdkLoaded()" defer></script>
 </body>
 </html>
