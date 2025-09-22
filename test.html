@@ -72,7 +72,7 @@ async function setupPayPalButton(paypalPaymentSession) {
     try {
       const { redirectURL } = await paypalPaymentSession.start(
         {
-          presentationMode: "auto",
+          presentationMode: "direct-app-switch",
           autoRedirect: {
             enabled: enableAutoRedirect.checked,
           },
@@ -85,6 +85,15 @@ async function setupPayPalButton(paypalPaymentSession) {
       }
     } catch (error) {
       console.error(error);
+      const { redirectURL } = await paypalPaymentSession.start(
+        {
+          presentationMode: "auto",
+          autoRedirect: {
+            enabled: enableAutoRedirect.checked,
+          },
+        },
+        createOrderPromiseReference,
+      );
     }
   });
 }
