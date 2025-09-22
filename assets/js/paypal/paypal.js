@@ -33,13 +33,6 @@ const paymentSessionOptions = {
         });
 
     },
-    onClick() {
-        console.log("clicked");
-        if (get_session_basket_purchase_units_items().length < 1) {
-        console.log("less than 1");
-            document.getElementById("add_to_cart_btn").click();
-        }
-    },
     onCancel(data) {
         console.log("onCancel", data);
     },
@@ -51,6 +44,10 @@ const paymentSessionOptions = {
 async function setupPayPalButton(paypalPaymentSession) {
     document.addEventListener("click", async (event) => {
         if (event.target.tagName === "PAYPAL-BUTTON") {
+            if (get_session_basket_purchase_units_items().length < 1) {
+            console.log("less than 1");
+                document.getElementById("add_to_cart_btn").click();
+            }
         const createOrderIdPromiseReference = createOrder();
         try {
             await paypalPaymentSession.start(
