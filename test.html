@@ -72,10 +72,7 @@ async function setupPayPalButton(paypalPaymentSession) {
     try {
       const { redirectURL } = await paypalPaymentSession.start(
         {
-          presentationMode: "direct-app-switch",
-          autoRedirect: {
-            enabled: enableAutoRedirect.checked,
-          },
+          presentationMode: "direct-app-switch"
         },
         createOrderPromiseReference,
       );
