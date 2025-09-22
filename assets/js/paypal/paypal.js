@@ -12,7 +12,7 @@ async function onPayPalWebSdkLoaded() {
             await paypalPaymentSession.resume();
         } else {
             setupPayPalButton(paypalPaymentSession);
-            remove_loading();
+            window.remove_loading?.();
         }
     } catch (error) {
         console.error(error);
