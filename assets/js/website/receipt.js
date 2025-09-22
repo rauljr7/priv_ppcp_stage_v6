@@ -1,219 +1,209 @@
-/* Receipt page logic (compact + modular) */
-(function () {
-  // Helpers
-  function $(sel) { return document.querySelector(sel); }
-  function set(id, text) { const el = document.getElementById(id); if (el) el.textContent = text == null ? "" : String(text); }
-  function show(id, on) { const el = document.getElementById(id); if (el) el.classList.toggle("is-hidden", on === false); }
-  function fmtMoney(v) {
-    if (v == null) return "$0.00";
-    const n = typeof v === "string" ? parseFloat(v) : +v;
-    return "$" + (isNaN(n) ? 0 : n).toFixed(2);
+"use strict";
+
+/* ========= Helpers ========= */
+function $(sel) { return document.querySelector(sel); }
+function set(id, text) { const el = document.getElementById(id); if (el) el.textContent = text == null ? "" : String(text); }
+function show(id, on) { const el = document.getElementById(id); if (el) el.classList.toggle("is-hidden", on === false); }
+function fmtMoney(v) {
+  if (v == null) return "$0.00";
+  const n = typeof v === "string" ? parseFloat(v) : +v;
+  return "$" + (isNaN(n) ? 0 : n).toFixed(2);
+}
+function joinAddr(a) {
+  if (!a) return "";
+  const parts = [
+    a.address_line_1, a.address_line_2,
+    a.admin_area_2, a.admin_area_1,
+    a.postal_code, a.country_code
+  ].map(s => (s || "").toString().trim()).filter(Boolean);
+  return parts.join(", ");
+}
+function getWebsiteSessionPU0() {
+  try {
+    const raw = localStorage.getItem("website_session");
+    if (!raw) return null;
+    const ws = JSON.parse(raw);
+    const pus = ws && ws.basket && Array.isArray(ws.basket.purchase_units) ? ws.basket.purchase_units : [];
+    return pus && pus[0] ? pus[0] : null;
+  } catch (e) {
+    return null;
   }
-  function joinAddr(a) {
-    if (!a) return "";
-    const parts = [
-      a.address_line_1, a.address_line_2,
-      a.admin_area_2, a.admin_area_1,
-      a.postal_code, a.country_code
-    ].map(s => (s || "").toString().trim()).filter(Boolean);
-    return parts.join(", ");
-  }
-  function getWebsiteSessionPU0() {
-    try {
-      const raw = localStorage.getItem("website_session");
-      if (!raw) return null;
-      const ws = JSON.parse(raw);
-      const pus = ws && ws.basket && Array.isArray(ws.basket.purchase_units) ? ws.basket.purchase_units : [];
-      return pus && pus[0] ? pus[0] : null;
-    } catch (e) {
-      return null;
-    }
-  }
+}
 
-  // Ensure buyer + payment row is two columns
-  function ensureTwoCol(id) {
-    const row = document.getElementById(id);
-    if (row) row.classList.add("two-col");
-  }
+/* ========= Layout helpers ========= */
+function ensureTwoCol(id) {
+  const row = document.getElementById(id);
+  if (row) row.classList.add("two-col");
+}
 
-  // Order items from localStorage (PU[0])
-  function renderItemsFromSession() {
-    const tbody = document.getElementById("items_body");
-    const emptyRow = document.getElementById("items_empty_row");
-    if (!tbody) return;
+/* ========= Items (from localStorage) ========= */
+function renderItemsFromSession() {
+  const tbody = document.getElementById("items_body");
+  const emptyRow = document.getElementById("items_empty_row");
+  if (!tbody) return;
 
-    // clear
-    while (tbody.firstChild) tbody.removeChild(tbody.firstChild);
+  while (tbody.firstChild) tbody.removeChild(tbody.firstChild);
 
-    const pu0 = getWebsiteSessionPU0();
-    if (!pu0) {
-      if (emptyRow) emptyRow.classList.remove("is-hidden");
-      return;
-    }
-
-    const desc = pu0.description || "";
-    const it = (Array.isArray(pu0.items) && pu0.items[0]) || null;
-
-    if (!it) {
-      if (emptyRow) emptyRow.classList.remove("is-hidden");
-      return;
-    }
-    if (emptyRow) emptyRow.classList.add("is-hidden");
-
-    // columns: Product, Options/Notes, Unit, Qty, Subtotal
-    const tr = document.createElement("tr");
-
-    const tdProd = document.createElement("td");
-    tdProd.textContent = it.name || "Item";
-
-    const tdOpts = document.createElement("td");
-    tdOpts.textContent = it.description || desc || "";
-
-    const tdUnit = document.createElement("td");
-    const unitVal = it.unit_amount && it.unit_amount.value ? it.unit_amount.value : "0.00";
-    tdUnit.textContent = fmtMoney(unitVal);
-
-    const tdQty = document.createElement("td");
-    const qty = parseInt(it.quantity || "1", 10);
-    tdQty.textContent = isNaN(qty) ? "1" : String(qty);
-
-    const tdSub = document.createElement("td");
-    const sub = (parseFloat(unitVal || 0) * (isNaN(qty) ? 1 : qty)).toFixed(2);
-    tdSub.textContent = fmtMoney(sub);
-
-    tr.appendChild(tdProd);
-    tr.appendChild(tdOpts);
-    tr.appendChild(tdUnit);
-    tr.appendChild(tdQty);
-    tr.appendChild(tdSub);
-    tbody.appendChild(tr);
+  const pu0 = getWebsiteSessionPU0();
+  if (!pu0) {
+    if (emptyRow) emptyRow.classList.remove("is-hidden");
+    return;
   }
 
-  // Populate Buyer block
-  function fillBuyer(tx) {
-    const payer = tx && tx.payer;
-    const name = payer && payer.name ? [payer.name.given_name, payer.name.surname].filter(Boolean).join(" ") : "";
-    const email = payer && payer.email_address || "";
-    const phone = payer && payer.phone && payer.phone.phone_number && payer.phone.phone_number.national_number || "";
-    const id = payer && payer.payer_id || "";
+  const desc = pu0.description || "";
+  const it = (Array.isArray(pu0.items) && pu0.items[0]) || null;
 
-    set("buyer_name", name);
-    set("buyer_email", email);
-    set("buyer_phone", phone);
-    set("buyer_id", id);
-
-    // Hide block if nothing meaningful
-    const hasAny = name || email || phone || id;
-    show("buyer_card", !!hasAny);
+  if (!it) {
+    if (emptyRow) emptyRow.classList.remove("is-hidden");
+    return;
   }
+  if (emptyRow) emptyRow.classList.add("is-hidden");
 
-  // Populate Payment block (supports PayPal now; card types left as commented placeholders)
-  function fillPayment(tx) {
-    const ps = tx && tx.payment_source || {};
-    let method = "";
-    let primary = "";
-    let secondary = "";
+  const tr = document.createElement("tr");
 
-    if (ps.paypal) {
-      method = "PayPal";
-      primary = ps.paypal.email_address || "";
-      const acct = ps.paypal.account_id ? ("Account: " + ps.paypal.account_id) : "";
-      secondary = acct;
-    }
-    // else if (ps.venmo) { method = "Venmo"; primary = "@" + (ps.venmo.username || ""); }
-    // else if (ps.apple_pay) { method = "Apple Pay"; primary = "•••• " + (ps.apple_pay.last4 || ""); }
-    // else if (ps.google_pay) { method = "Google Pay"; primary = "•••• " + (ps.google_pay.last4 || ""); }
-    // else if (ps.card) { method = (ps.card.brand || "Card"); primary = "•••• " + (ps.card.last4 || ""); }
+  const tdProd = document.createElement("td");
+  tdProd.textContent = it.name || "Item";
 
-    set("pay_type", method || "Payment");
-    set("pay_detail_primary", primary);
-    set("pay_detail_secondary", secondary);
+  const tdOpts = document.createElement("td");
+  tdOpts.textContent = it.description || desc || "";
 
-    const hasAny = method || primary || secondary;
-    show("payment_card", !!hasAny);
+  const tdUnit = document.createElement("td");
+  const unitVal = it.unit_amount && it.unit_amount.value ? it.unit_amount.value : "0.00";
+  tdUnit.textContent = fmtMoney(unitVal);
+
+  const tdQty = document.createElement("td");
+  const qty = parseInt(it.quantity || "1", 10);
+  tdQty.textContent = isNaN(qty) ? "1" : String(qty);
+
+  const tdSub = document.createElement("td");
+  const sub = (parseFloat(unitVal || 0) * (isNaN(qty) ? 1 : qty)).toFixed(2);
+  tdSub.textContent = fmtMoney(sub);
+
+  tr.appendChild(tdProd);
+  tr.appendChild(tdOpts);
+  tr.appendChild(tdUnit);
+  tr.appendChild(tdQty);
+  tr.appendChild(tdSub);
+  tbody.appendChild(tr);
+}
+
+/* ========= Blocks ========= */
+function fillBuyer(tx) {
+  const payer = tx && tx.payer;
+  const name = payer && payer.name ? [payer.name.given_name, payer.name.surname].filter(Boolean).join(" ") : "";
+  const email = (payer && payer.email_address) || "";
+  const phone = payer && payer.phone && payer.phone.phone_number && payer.phone.phone_number.national_number || "";
+  const id = (payer && payer.payer_id) || "";
+
+  set("buyer_name", name);
+  set("buyer_email", email);
+  set("buyer_phone", phone);
+  set("buyer_id", id);
+
+  const hasAny = name || email || phone || id;
+  show("buyer_card", !!hasAny);
+}
+
+function fillPayment(tx) {
+  const ps = tx && tx.payment_source || {};
+  let method = "";
+  let primary = "";
+  let secondary = "";
+
+  if (ps.paypal) {
+    method = "PayPal";
+    primary = ps.paypal.email_address || "";
+    const acct = ps.paypal.account_id ? ("Account: " + ps.paypal.account_id) : "";
+    secondary = acct;
   }
+  // else if (ps.venmo) { method = "Venmo"; primary = "@" + (ps.venmo.username || ""); }
+  // else if (ps.apple_pay) { method = "Apple Pay"; primary = "•••• " + (ps.apple_pay.last4 || ""); }
+  // else if (ps.google_pay) { method = "Google Pay"; primary = "•••• " + (ps.google_pay.last4 || ""); }
+  // else if (ps.card) { method = (ps.card.brand || "Card"); primary = "•••• " + (ps.card.last4 || ""); }
 
-  // Addresses (Billing from tx.payer.address; Shipping from PU[0].shipping)
-  function fillAddresses(tx) {
-    const billing = tx && tx.payer && tx.payer.address || null;
-    const billingName = tx && tx.payer && tx.payer.name ? [tx.payer.name.given_name, tx.payer.name.surname].filter(Boolean).join(" ") : "";
+  set("pay_type", method || "Payment");
+  set("pay_detail_primary", primary);
+  set("pay_detail_secondary", secondary);
 
-    const pu0 = (tx && Array.isArray(tx.purchase_units) && tx.purchase_units[0]) || {};
-    const ship = pu0 && pu0.shipping || null;
-    const shipName = ship && ship.name && ship.name.full_name || "";
-    const shipAddr = ship && ship.address || null;
+  const hasAny = method || primary || secondary;
+  show("payment_card", !!hasAny);
+}
 
-    set("billing_name", billingName);
-    set("billing_address", joinAddr(billing));
-    const hasBill = billingName || joinAddr(billing);
-    show("billing_card", !!hasBill);
+function fillAddresses(tx) {
+  const billing = tx && tx.payer && tx.payer.address || null;
+  const billingName = tx && tx.payer && tx.payer.name ? [tx.payer.name.given_name, tx.payer.name.surname].filter(Boolean).join(" ") : "";
 
-    set("shipping_name", shipName);
-    set("shipping_address", joinAddr(shipAddr));
+  const pu0 = (tx && Array.isArray(tx.purchase_units) && tx.purchase_units[0]) || {};
+  const ship = pu0 && pu0.shipping || null;
+  const shipName = ship && ship.name && ship.name.full_name || "";
+  const shipAddr = ship && ship.address || null;
 
-    // shipping method chip
-    let method = "";
-    let price = "";
-    const opts = ship && Array.isArray(ship.options) ? ship.options : [];
-    const chosen = opts.find(o => o && o.selected) || opts[0];
-    if (chosen) {
-      method = chosen.label || chosen.id || "";
-      price = chosen.amount && chosen.amount.value ? chosen.amount.value : "";
-    }
-    set("shipping_method_chip", method ? method : "Shipping");
-    set("shipping_cost_chip", price ? fmtMoney(price) : "");
+  set("billing_name", billingName);
+  set("billing_address", joinAddr(billing));
+  const hasBill = billingName || joinAddr(billing);
+  show("billing_card", !!hasBill);
 
-    const hasShip = shipName || joinAddr(shipAddr) || method || price;
-    show("shipping_card", !!hasShip);
+  set("shipping_name", shipName);
+  set("shipping_address", joinAddr(shipAddr));
+
+  let method = "";
+  let price = "";
+  const opts = ship && Array.isArray(ship.options) ? ship.options : [];
+  const chosen = opts.find(o => o && o.selected) || opts[0];
+  if (chosen) {
+    method = chosen.label || chosen.id || "";
+    price = chosen.amount && chosen.amount.value ? chosen.amount.value : "";
   }
+  set("shipping_method_chip", method ? method : "Shipping");
+  set("shipping_cost_chip", price ? fmtMoney(price) : "");
 
-  // Order meta + totals
-  function fillOrderMeta(tx) {
-    const id = tx && tx.id || "";
-    const status = tx && tx.status || "";
-    set("receipt_order_id", id);
-    set("receipt_status", status);
+  const hasShip = shipName || joinAddr(shipAddr) || method || price;
+  show("shipping_card", !!hasShip);
+}
 
-    // Totals: if setTotals() not called yet, compute a safe fallback from capture + selected shipping
-    const pu0 = tx && tx.purchase_units && tx.purchase_units[0] || {};
-    const cap = pu0.payments && pu0.payments.captures && pu0.payments.captures[0];
-    const captureTotal = cap && cap.amount && parseFloat(cap.amount.value) || 0;
+function fillOrderMeta(tx) {
+  const id = (tx && tx.id) || "";
+  const status = (tx && tx.status) || "";
+  set("receipt_order_id", id);
+  set("receipt_status", status);
 
-    const opts = (pu0.shipping && pu0.shipping.options) || [];
-    const selected = opts.find(o => o && o.selected) || opts[0];
-    const ship = selected && selected.amount ? parseFloat(selected.amount.value) : 0;
+  const pu0 = tx && tx.purchase_units && tx.purchase_units[0] || {};
+  const cap = pu0.payments && pu0.payments.captures && pu0.payments.captures[0];
+  const captureTotal = cap && cap.amount && parseFloat(cap.amount.value) || 0;
 
-    const items = Math.max(0, +(captureTotal - ship).toFixed(2));
+  const opts = (pu0.shipping && pu0.shipping.options) || [];
+  const selected = opts.find(o => o && o.selected) || opts[0];
+  const ship = selected && selected.amount ? parseFloat(selected.amount.value) : 0;
 
-    // only fill if those fields are empty
-    if (!$("#total_items_amount")?.textContent) set("total_items_amount", fmtMoney(items));
-    if (!$("#total_shipping_amount")?.textContent) set("total_shipping_amount", fmtMoney(ship));
-    if (!$("#total_order_amount")?.textContent) set("total_order_amount", fmtMoney(captureTotal));
-  }
+  const items = Math.max(0, +(captureTotal - ship).toFixed(2));
 
-  // Public API
-  window.receipt = {
-    setTransaction(tx) {
-      ensureTwoCol("buyer_payment_row"); // make buyer + payment 2-col
-      fillBuyer(tx);
-      fillPayment(tx);
-      fillAddresses(tx);
-      fillOrderMeta(tx);
-      renderItemsFromSession();          // items come from website_session
-    },
-    setTotals({ items, shipping, total }) {
-      if (typeof items !== "undefined") set("total_items_amount", fmtMoney(items));
-      if (typeof shipping !== "undefined") set("total_shipping_amount", fmtMoney(shipping));
-      if (typeof total !== "undefined") set("total_order_amount", fmtMoney(total));
-    },
-    hideSection(id) { show(id, false); },
-    refreshItemsFromSession() { renderItemsFromSession(); }
-  };
+  if (!$("#total_items_amount")?.textContent) set("total_items_amount", fmtMoney(items));
+  if (!$("#total_shipping_amount")?.textContent) set("total_shipping_amount", fmtMoney(ship));
+  if (!$("#total_order_amount")?.textContent) set("total_order_amount", fmtMoney(captureTotal));
+}
 
-  // Auto-enhance columns on load
-  document.addEventListener("DOMContentLoaded", function () {
-    ensureTwoCol("addresses_row");
+/* ========= Public API ========= */
+window.receipt = {
+  setTransaction: function (tx) {
     ensureTwoCol("buyer_payment_row");
-    renderItemsFromSession();
-  });
-})();
+    fillBuyer(tx);
+    fillPayment(tx);
+    fillAddresses(tx);
+    fillOrderMeta(tx);
+    renderItemsFromSession(); // items from website_session
+  },
+  setTotals: function ({ items, shipping, total } = {}) {
+    if (typeof items !== "undefined") set("total_items_amount", fmtMoney(items));
+    if (typeof shipping !== "undefined") set("total_shipping_amount", fmtMoney(shipping));
+    if (typeof total !== "undefined") set("total_order_amount", fmtMoney(total));
+  },
+  hideSection: function (id) { show(id, false); },
+  refreshItemsFromSession: function () { renderItemsFromSession(); }
+};
+
+/* ========= DOM Ready ========= */
+document.addEventListener("DOMContentLoaded", function () {
+  ensureTwoCol("addresses_row");
+  ensureTwoCol("buyer_payment_row");
+  renderItemsFromSession();
+});
