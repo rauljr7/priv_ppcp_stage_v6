@@ -19,7 +19,7 @@
       <label for="enable-auto-redirect"> Enable auto-redirect </label>
     </div>
     <div id="button-container">
-      <paypal-button id="paypal-button" ></paypal-button>
+      <paypal-button id="paypal-button" hidden></paypal-button>
     </div>
 
     <script>
@@ -38,6 +38,7 @@
     if (paypalPaymentSession.hasReturned()) {
       await paypalPaymentSession.resume();
     } else {
+      console.log("es");
       setupPayPalButton(paypalPaymentSession);
     }
   } catch (error) {
