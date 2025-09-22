@@ -672,20 +672,15 @@ function handle_change(event) {
   let t = event.target;
 
   if (t && t.matches("#ship_method_select")) {
-    let patch = collect_shipping_methods_patch_from_dom();
-    set_session_shipping_methods(patch).then(function () {
-      if (typeof set_session_purchase_unit_amount_breakdown === "function") {
-        set_session_purchase_unit_amount_breakdown(0).then(function () {
-          update_summary_totals();
-          set_session_purchase_unit_shipping_from_top_level(0);
-          run_all_section_checks();
-        });
-      } else {
-        update_summary_totals();
-        set_session_purchase_unit_shipping_from_top_level(0);
-        run_all_section_checks();
-      }
+    const selectedId = String(t.value || "");
+    if (!selectedId) return;
+
+    // Canonical path: one helper keeps session + PU + breakdown in sync
+    set_session_selected_shipping(selectedId).then(function () {
+      update_summary_totals();
+      run_all_section_checks();
     });
+
     return;
   }
 }

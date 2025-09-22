@@ -71,61 +71,6 @@ function get_selected_shipping_amount_from_session(sess) {
   return 0;
 }
 
-function set_session_purchase_unit_amount_breakdown(pu_index) {
-  return new Promise(function (resolve) {
-    ensure_website_session();
-    let sess = window.website_session || {};
-    let units = [];
-    if (typeof get_session_basket_purchase_units === "function") {
-      units = get_session_basket_purchase_units() || [];
-    } else if (sess.basket && Array.isArray(sess.basket.purchase_units) === true) {
-      units = sess.basket.purchase_units;
-    }
-
-    if (Array.isArray(units) === false || units.length === 0) {
-      resolve(false);
-      return;
-    }
-
-    let shipping_num = get_selected_shipping_amount_from_session(sess);
-
-    for (let i = 0; i < units.length; i = i + 1) {
-      let pu = units[i] || {};
-      let item_total_num = compute_item_total_from_items(pu.items || []);
-      let shipping_here = i === (typeof pu_index === "number" ? pu_index : 0) ? shipping_num : 0;
-      let total_num = Number((item_total_num + shipping_here).toFixed(2));
-
-      let currency = "USD";
-      if (Array.isArray(pu.items) === true && pu.items.length > 0) {
-        let it0 = pu.items[0];
-        if (it0 && it0.unit_amount && typeof it0.unit_amount.currency_code === "string" && it0.unit_amount.currency_code.length > 0) {
-          currency = it0.unit_amount.currency_code;
-        }
-      } else if (pu.amount && typeof pu.amount.currency_code === "string" && pu.amount.currency_code.length > 0) {
-        currency = pu.amount.currency_code;
-      }
-
-      pu.amount = pu.amount || {};
-      pu.amount.currency_code = currency;
-      pu.amount.value = total_num.toFixed(2);
-      pu.amount.breakdown = {
-        item_total: { currency_code: currency, value: item_total_num.toFixed(2) },
-        shipping:   { currency_code: currency, value: shipping_here.toFixed(2) }
-      };
-      units[i] = pu;
-    }
-
-    if (typeof set_session_basket_purchase_units === "function") {
-      set_session_basket_purchase_units(units).then(function () { resolve(true); });
-    } else {
-      if (!sess.basket) sess.basket = {};
-      sess.basket.purchase_units = units;
-      window.website_session = sess;
-      resolve(true);
-    }
-  });
-}
-
 function set_session_purchase_unit_amount_breakdown_all() {
   return set_session_purchase_unit_amount_breakdown(0);
 }
@@ -383,6 +328,212 @@ function set_session_purchase_unit_shipping_from_top_level(pu_index) {
     set_session_basket({ purchase_units: units }).then(function () {
       set_session_purchase_unit_amount_breakdown(typeof pu_index === "number" ? pu_index : 0);
       resolve(pu.shipping);
+    });
+  });
+}
+
+// --- Shipping selection helpers you can call from anywhere ---
+
+function get_session_selected_shipping_id() {
+  ensure_website_session();
+  let sess = window.website_session || {};
+
+  if (sess.shipping_methods && typeof sess.shipping_methods.selected === "string") {
+    if (sess.shipping_methods.selected.length > 0) {
+      return sess.shipping_methods.selected;
+    }
+  }
+
+  // fallback: derive from PU[0].shipping.options if present
+  if (sess.basket && Array.isArray(sess.basket.purchase_units) === true && sess.basket.purchase_units.length > 0) {
+    let pu0 = sess.basket.purchase_units[0];
+    if (pu0 && pu0.shipping && Array.isArray(pu0.shipping.options) === true) {
+      for (let i = 0; i < pu0.shipping.options.length; i = i + 1) {
+        let opt = pu0.shipping.options[i];
+        if (opt && opt.selected === true && typeof opt.id === "string") {
+          return opt.id;
+        }
+      }
+    }
+  }
+
+  return "";
+}
+
+function get_session_selected_shipping_option() {
+  ensure_website_session();
+  let sess = window.website_session || {};
+  let selected_id = get_session_selected_shipping_id();
+
+  // prefer top-level options
+  if (sess.shipping_methods && Array.isArray(sess.shipping_methods.options) === true) {
+    for (let i = 0; i < sess.shipping_methods.options.length; i = i + 1) {
+      let opt = sess.shipping_methods.options[i];
+      if (opt && String(opt.id) === String(selected_id)) {
+        return opt;
+      }
+    }
+  }
+
+  // fallback: purchase_unit[0].shipping.options
+  if (sess.basket && Array.isArray(sess.basket.purchase_units) === true && sess.basket.purchase_units.length > 0) {
+    let pu0 = sess.basket.purchase_units[0];
+    if (pu0 && pu0.shipping && Array.isArray(pu0.shipping.options) === true) {
+      for (let i = 0; i < pu0.shipping.options.length; i = i + 1) {
+        let opt = pu0.shipping.options[i];
+        if (opt && String(opt.id) === String(selected_id)) {
+          return opt;
+        }
+      }
+    }
+  }
+
+  return null;
+}
+
+// Compute the total of all line items (price * qty) for a PU
+function compute_purchase_unit_items_total(pu) {
+  let total = 0;
+  if (pu && Array.isArray(pu.items) === true) {
+    for (let i = 0; i < pu.items.length; i = i + 1) {
+      let it = pu.items[i];
+      if (!it || !it.unit_amount || typeof it.unit_amount.value !== "string") {
+        continue;
+      }
+      let price = parseFloat(it.unit_amount.value);
+      if (isNaN(price) === true) {
+        price = 0;
+      }
+      let qty = 1;
+      if (typeof it.quantity !== "undefined") {
+        let qn = parseInt(String(it.quantity), 10);
+        if (isNaN(qn) === false && qn > 0) {
+          qty = qn;
+        }
+      }
+      total = total + price * qty;
+    }
+  }
+  return total;
+}
+
+// Read selected shipping id from top-level session
+function get_selected_shipping_id_from_session(sess) {
+  if (sess && sess.shipping_methods && typeof sess.shipping_methods.selected === "string") {
+    return sess.shipping_methods.selected;
+  }
+  return "";
+}
+
+// Find a shipping option by id in the best available source
+function find_shipping_option_by_id(sess, id) {
+  // Prefer top-level shipping_methods.options
+  if (sess && sess.shipping_methods && Array.isArray(sess.shipping_methods.options) === true) {
+    for (let i = 0; i < sess.shipping_methods.options.length; i = i + 1) {
+      let opt = sess.shipping_methods.options[i];
+      if (opt && String(opt.id) === String(id)) {
+        return opt;
+      }
+    }
+  }
+  // Fallback to PU[0].shipping.options
+  if (sess && sess.basket && Array.isArray(sess.basket.purchase_units) === true && sess.basket.purchase_units.length > 0) {
+    let pu0 = sess.basket.purchase_units[0];
+    if (pu0 && pu0.shipping && Array.isArray(pu0.shipping.options) === true) {
+      for (let j = 0; j < pu0.shipping.options.length; j = j + 1) {
+        let o = pu0.shipping.options[j];
+        if (o && String(o.id) === String(id)) {
+          return o;
+        }
+      }
+    }
+  }
+  return null;
+}
+
+// Set PU[pu_index].amount and amount.breakdown (item_total + shipping)
+function set_session_purchase_unit_amount_breakdown(pu_index) {
+  return new Promise(function (resolve) {
+    ensure_website_session();
+
+    let idx = typeof pu_index === "number" ? pu_index : 0;
+    let units = get_session_basket_purchase_units();
+    if (Array.isArray(units) === false || units.length <= idx) {
+      resolve(false);
+      return;
+    }
+
+    let sess = typeof get_website_session === "function" ? get_website_session() : window.website_session;
+    let pu = units[idx];
+
+    let currency = "USD";
+    if (pu && pu.amount && typeof pu.amount.currency_code === "string") {
+      currency = pu.amount.currency_code;
+    } else if (pu && Array.isArray(pu.items) === true && pu.items.length > 0) {
+      let first = pu.items[0];
+      if (first && first.unit_amount && typeof first.unit_amount.currency_code === "string") {
+        currency = first.unit_amount.currency_code;
+      }
+    }
+
+    let items_total_num = compute_purchase_unit_items_total(pu);
+
+    let selected_id = get_selected_shipping_id_from_session(sess);
+    let shipping_opt = find_shipping_option_by_id(sess, selected_id);
+    let shipping_num = 0;
+    if (shipping_opt) {
+      if (shipping_opt.amount && typeof shipping_opt.amount.value === "string") {
+        let sn = parseFloat(shipping_opt.amount.value);
+        if (isNaN(sn) === false) {
+          shipping_num = sn;
+        }
+      } else if (typeof shipping_opt.price === "string") {
+        let sn2 = parseFloat(shipping_opt.price);
+        if (isNaN(sn2) === false) {
+          shipping_num = sn2;
+        }
+      }
+    }
+
+    let total_num = items_total_num + shipping_num;
+
+    if (!pu.amount) {
+      pu.amount = {};
+    }
+    pu.amount.currency_code = currency;
+    pu.amount.value = total_num.toFixed(2);
+    pu.amount.breakdown = {
+      item_total: {
+        currency_code: currency,
+        value: items_total_num.toFixed(2)
+      },
+      shipping: {
+        currency_code: currency,
+        value: shipping_num.toFixed(2)
+      }
+    };
+
+    units[idx] = pu;
+
+    set_session_basket_purchase_units(units).then(function () {
+      resolve(true);
+    });
+  });
+}
+
+// Canonical single-call updater for shipping selection:
+// 1) update top-level selection
+// 2) sync PU[0].shipping from top-level
+// 3) recompute PU[0].amount.breakdown (item_total + shipping)
+function set_session_selected_shipping(selectedId) {
+  return new Promise(function (resolve) {
+    let setTop = set_session_shipping_methods({ selected: String(selectedId) });
+    setTop.then(function () {
+      set_session_purchase_unit_shipping_from_top_level(0).then(function () {
+        set_session_purchase_unit_amount_breakdown(0).then(function () {
+          resolve(true);
+        });
+      });
     });
   });
 }
