@@ -26,6 +26,8 @@ async function createOrder() {
     let orderPayload = {
         intent: "CAPTURE"
     };
+    // https://developer.paypal.com/docs/api/orders/v2/#orders_create
+    // https://developer.paypal.com/docs/api/orders/v2/#orders_create!ct=application/json&path=purchase_units&t=request
     orderPayload.purchase_units = local_storage_website_session.basket.purchase_units;
 
   let resp = await fetch(create_order_endpoint, {

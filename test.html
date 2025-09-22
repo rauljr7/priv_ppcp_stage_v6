@@ -11,7 +11,7 @@
     </style>
   </head>
   <body>
-    <paypal-button class="paypal-blue" id="paypal-button" hidden></paypal-button>
+    <paypal-button class="paypal-blue" id="paypal-button"></paypal-button>
     <script src="assets/js/paypal/utils.js" defer></script>
     <script defer>
       async function onPayPalWebSdkLoaded() {
@@ -53,9 +53,7 @@
       };
 
       async function setupPayPalButton(paypalPaymentSession) {
-        const enableAutoRedirect = document.querySelector("#enable-auto-redirect");
         const paypalButton = document.querySelector("#paypal-button");
-        paypalButton.removeAttribute("hidden");
 
         paypalButton.addEventListener("click", async () => {
           const createOrderPromiseReference = createOrder();
