@@ -26,6 +26,12 @@ const paymentSessionOptions = {
             orderId: data.orderId,
         });
         console.log("Capture result", orderData);
+        run_loading();
+        set_session_transaction_payload(orderData).then(() => {
+            const sid = typeof get_session_id === "function" ? get_session_id() : (window.website_session?.id || "");
+            window.location.assign(`receipt.html?session=${encodeURIComponent(sid)}`);
+        });
+
     },
     onCancel(data) {
         console.log("onCancel", data);

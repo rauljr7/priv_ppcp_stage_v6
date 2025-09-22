@@ -197,3 +197,57 @@ document.addEventListener("DOMContentLoaded", function () {
   const printBtn = document.getElementById("receipt_print_btn");
   if (printBtn) printBtn.addEventListener("click", () => window.print());
 });
+// --- URL / session bootstrap ---
+window.check_url = function () {
+  // show loading ASAP (no-op if missing)
+  if (typeof window.run_loading === "function") window.run_loading();
+
+  const bail = () => {
+    if (typeof window.remove_loading === "function") window.remove_loading();
+    window.location.assign("/");
+  };
+
+  try {
+    const params = new URLSearchParams(window.location.search);
+    const sessionId = params.get("session");
+    if (!sessionId) return bail();
+
+    const raw = localStorage.getItem("website_session");
+    if (!raw) return bail();
+
+    let ws = null;
+    try { ws = JSON.parse(raw); } catch (_) {}
+    if (!ws || typeof ws !== "object") return bail();
+    if (ws.id && String(ws.id) !== String(sessionId)) return bail();
+
+    const tx = ws.transaction_payload || window.transaction_payload;
+    if (!tx || typeof tx !== "object" || Array.isArray(tx)) return bail();
+
+    // Build the receipt
+    if (window.receipt && typeof window.receipt.setTransaction === "function") {
+      window.receipt.setTransaction(tx);
+    }
+
+    // Totals from session PU breakdown (if available)
+    const pu0 =
+      ws &&
+      ws.basket &&
+      Array.isArray(ws.basket.purchase_units) &&
+      ws.basket.purchase_units[0];
+
+    if (pu0 && pu0.amount) {
+      const itemsV = pu0.amount?.breakdown?.item_total?.value;
+      const shipV  = pu0.amount?.breakdown?.shipping?.value;
+      const totalV = pu0.amount?.value;
+      if (window.receipt && typeof window.receipt.setTotals === "function") {
+        window.receipt.setTotals({ items: itemsV, shipping: shipV, total: totalV });
+      }
+    }
+
+    // done
+    if (typeof window.remove_loading === "function") window.remove_loading();
+  } catch (_) {
+    // any unexpected error => home
+    bail();
+  }
+};
