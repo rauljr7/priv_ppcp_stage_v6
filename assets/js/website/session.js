@@ -774,40 +774,50 @@ function sanitize_purchase_unit_array(units_array) {
   function is_valid_email(email) { return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(String(email || "")); }
   function normalize_country_code(cc) { var d = only_digits(cc); return (/^\d{1,3}$/).test(d) ? d : ""; }
   function normalize_national_number(nn) { var d = only_digits(nn); return (d.length >= 7 && d.length <= 15) ? d : ""; }
-  function address_has_any(a) {
-    if (!a || typeof a !== "object") return false;
-    var keys = ["address_line_1","address_line_2","admin_area_2","admin_area_1","postal_code","country_code"];
-    for (var k = 0; k < keys.length; k++) {
-      if (is_nonempty_string(a[keys[k]])) return true;
-    }
-    return false;
-  }
 
   var out = [];
   for (var i = 0; i < units_array.length; i++) {
     var unit = JSON.parse(JSON.stringify(units_array[i] || {}));
 
     if (unit && unit.shipping) {
-      var addr = unit.shipping.address || {};
-      var a1_empty = !is_nonempty_string(addr.address_line_1);
-      var addr_incomplete = !address_has_any(addr);
-      if (a1_empty || addr_incomplete) {
-        delete unit.shipping;
-      } else {
-        if (!is_nonempty_string(unit.shipping.email_address) || !is_valid_email(unit.shipping.email_address)) {
-          if (unit.shipping.hasOwnProperty("email_address")) delete unit.shipping.email_address;
-        }
-        if (unit.shipping.hasOwnProperty("phone_number") && unit.shipping.phone_number) {
-          var cc = normalize_country_code(unit.shipping.phone_number.country_code);
-          var nn = normalize_national_number(unit.shipping.phone_number.national_number);
-          if (is_nonempty_string(cc) && is_nonempty_string(nn)) {
-            unit.shipping.phone_number.country_code = cc;
-            unit.shipping.phone_number.national_number = nn;
-          } else {
-            delete unit.shipping.phone_number;
-          }
+      // email
+      if (!is_nonempty_string(unit.shipping.email_address) || !is_valid_email(unit.shipping.email_address)) {
+        if (unit.shipping.hasOwnProperty("email_address")) delete unit.shipping.email_address;
+      }
+
+      // phone (both parts must be valid or remove entirely)
+      if (unit.shipping.hasOwnProperty("phone_number") && unit.shipping.phone_number) {
+        var cc = normalize_country_code(unit.shipping.phone_number.country_code);
+        var nn = normalize_national_number(unit.shipping.phone_number.national_number);
+        if (is_nonempty_string(cc) && is_nonempty_string(nn)) {
+          unit.shipping.phone_number.country_code = cc;
+          unit.shipping.phone_number.national_number = nn;
+        } else {
+          delete unit.shipping.phone_number;
         }
       }
+
+      // name: remove if full_name empty
+      if (unit.shipping.hasOwnProperty("name") && unit.shipping.name) {
+        if (!is_nonempty_string(unit.shipping.name.full_name)) {
+          delete unit.shipping.name;
+        }
+      }
+
+      // address: if ANY required field is missing/empty, remove the entire address object
+      if (unit.shipping.hasOwnProperty("address") && unit.shipping.address && typeof unit.shipping.address === "object") {
+        var a = unit.shipping.address;
+        var required = ["address_line_1", "admin_area_2", "admin_area_1", "postal_code", "country_code"]; // line_2 is optional
+        var incomplete = false;
+        for (var r = 0; r < required.length; r++) {
+          if (!is_nonempty_string(a[required[r]])) { incomplete = true; break; }
+        }
+        if (incomplete) {
+          delete unit.shipping.address;
+        }
+      }
+
+      // NOTE: Do NOT touch shipping.options — keep it as-is.
     }
 
     out.push(unit);
