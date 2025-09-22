@@ -170,7 +170,18 @@
   <script src="assets/js/website/receipt.js" defer></script>
   <script>
     document.addEventListener("DOMContentLoaded", function () {
-      window.check_url?.();
+      if (typeof window.check_url === "function") {
+        window.check_url()
+          .then(function (res) {
+            if (res && res.ok) {
+              try { localStorage.removeItem("website_session"); } catch {}
+              try { if ("website_session" in window) delete window.website_session; } catch {}
+            }
+          })
+          .catch(function () {
+            /* ignored; check_url already redirected on failure */
+          });
+      }
     });
   </script>
 </body>

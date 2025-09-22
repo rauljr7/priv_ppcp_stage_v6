@@ -197,57 +197,50 @@ document.addEventListener("DOMContentLoaded", function () {
   const printBtn = document.getElementById("receipt_print_btn");
   if (printBtn) printBtn.addEventListener("click", () => window.print());
 });
-// --- URL / session bootstrap ---
-window.check_url = function () {
-  // show loading ASAP (no-op if missing)
+
+window.check_url = async function () {
   if (typeof window.run_loading === "function") window.run_loading();
 
-  const bail = () => {
+  const bail = (reason) => {
     if (typeof window.remove_loading === "function") window.remove_loading();
     window.location.assign("/");
+    throw new Error(reason || "bail");
   };
 
   try {
     const params = new URLSearchParams(window.location.search);
     const sessionId = params.get("session");
-    if (!sessionId) return bail();
+    if (!sessionId) return bail("missing_session_param");
 
     const raw = localStorage.getItem("website_session");
-    if (!raw) return bail();
+    if (!raw) return bail("missing_website_session");
 
     let ws = null;
-    try { ws = JSON.parse(raw); } catch (_) {}
-    if (!ws || typeof ws !== "object") return bail();
-    if (ws.id && String(ws.id) !== String(sessionId)) return bail();
+    try { ws = JSON.parse(raw); } catch { return bail("invalid_session_json"); }
+    if (!ws || typeof ws !== "object") return bail("invalid_session_obj");
+    if (ws.id && String(ws.id) !== String(sessionId)) return bail("session_id_mismatch");
 
     const tx = ws.transaction_payload || window.transaction_payload;
-    if (!tx || typeof tx !== "object" || Array.isArray(tx)) return bail();
+    if (!tx || typeof tx !== "object" || Array.isArray(tx)) return bail("missing_tx_payload");
 
-    // Build the receipt
     if (window.receipt && typeof window.receipt.setTransaction === "function") {
       window.receipt.setTransaction(tx);
     }
 
-    // Totals from session PU breakdown (if available)
-    const pu0 =
-      ws &&
-      ws.basket &&
-      Array.isArray(ws.basket.purchase_units) &&
-      ws.basket.purchase_units[0];
-
-    if (pu0 && pu0.amount) {
-      const itemsV = pu0.amount?.breakdown?.item_total?.value;
-      const shipV  = pu0.amount?.breakdown?.shipping?.value;
-      const totalV = pu0.amount?.value;
-      if (window.receipt && typeof window.receipt.setTotals === "function") {
-        window.receipt.setTotals({ items: itemsV, shipping: shipV, total: totalV });
-      }
+    const pu0 = ws?.basket?.purchase_units?.[0];
+    if (pu0?.amount && window.receipt && typeof window.receipt.setTotals === "function") {
+      window.receipt.setTotals({
+        items: pu0.amount?.breakdown?.item_total?.value,
+        shipping: pu0.amount?.breakdown?.shipping?.value,
+        total: pu0.amount?.value
+      });
     }
 
-    // done
     if (typeof window.remove_loading === "function") window.remove_loading();
-  } catch (_) {
-    // any unexpected error => home
-    bail();
+    return { ok: true, sessionId };
+  } catch (err) {
+    if (typeof window.remove_loading === "function") window.remove_loading();
+    window.location.assign("/");
+    return { ok: false, error: String(err?.message || err) };
   }
 };
