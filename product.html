@@ -16,7 +16,14 @@
       padding: 8px;
     }
     #product_right_panel #express_list { margin-top: 10px; }
+    paypal-button {
+      width: 100%;
+      max-width: 500px;
+    }
   </style>
+  <script src="assets/js/paypal/utils.js" defer></script>
+  <script src="assets/js/paypal/paypal.js" defer></script>
+  <script src="https://www.sandbox.paypal.com/web-sdk/v6/core" onload="onPayPalWebSdkLoaded()" defer></script>
 </head>
 <body id="app_root">
   <header id="site_header">
@@ -78,7 +85,7 @@
         <button type="button" id="add_to_cart_btn" data-add-to-cart aria-label="Add Widget to cart">Add to Cart</button>
 
         <div id="express_list" data-express-list>
-          <button type="button" id="express_paypal_btn" data-express aria-label="PayPal">PayPal</button>
+          <paypal-button class="paypal-blue" id="express_paypal_btn" data-express aria-label="PayPal"></paypal-button>
           <button type="button" id="express_venmo_btn" data-express aria-label="Venmo">Venmo</button>
           <button type="button" id="express_paylater_btn" data-express aria-label="Pay Later">Pay Later</button>
           <button type="button" id="express_gpay_btn" data-express aria-label="Google Pay">Google&nbsp;Pay</button>
