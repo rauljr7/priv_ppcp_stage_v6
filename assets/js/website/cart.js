@@ -257,40 +257,6 @@ function collect_quantities_from_dom() {
   return map;
 }
 
-function recompute_unit_amount_value(unit_obj) {
-  if (!unit_obj) {
-    return;
-  }
-  let total = 0;
-  if (Array.isArray(unit_obj.items) === true) {
-    for (let i = 0; i < unit_obj.items.length; i = i + 1) {
-      let it = unit_obj.items[i];
-      if (!it || !it.unit_amount || typeof it.unit_amount.value !== "string") {
-        continue;
-      }
-      let price_num = parseFloat(it.unit_amount.value);
-      if (isNaN(price_num) === true) {
-        price_num = 0;
-      }
-      let qty_num = 1;
-      if (typeof it.quantity !== "undefined") {
-        qty_num = parseInt(String(it.quantity), 10);
-        if (isNaN(qty_num) === true || qty_num < 1) {
-          qty_num = 1;
-        }
-      }
-      total = total + price_num * qty_num;
-    }
-  }
-  if (!unit_obj.amount) {
-    unit_obj.amount = {};
-  }
-  unit_obj.amount.value = total.toFixed(2);
-  if (!unit_obj.amount.currency_code) {
-    unit_obj.amount.currency_code = "USD";
-  }
-}
-
 function update_cart_quantities_and_persist() {
   return new Promise(function (resolve) {
     ensure_website_session();
@@ -317,11 +283,14 @@ function update_cart_quantities_and_persist() {
           it.quantity = String(new_qty);
         }
       }
-      recompute_unit_amount_value(unit);
     }
 
     set_session_basket_purchase_units(units).then(function () {
-      resolve(true);
+      if (typeof set_session_purchase_unit_amount_breakdown_all === "function") {
+        set_session_purchase_unit_amount_breakdown_all().then(function () { resolve(true); });
+      } else {
+        resolve(true);
+      }
     });
   });
 }

@@ -295,6 +295,13 @@ function get_subtotal_from_session(sess) {
   }
   if (Array.isArray(sess.basket.purchase_units) === true && sess.basket.purchase_units.length > 0) {
     let pu = sess.basket.purchase_units[0];
+    if (pu && pu.amount && pu.amount.breakdown && pu.amount.breakdown.item_total && typeof pu.amount.breakdown.item_total.value === "string") {
+      let n0 = parseFloat(pu.amount.breakdown.item_total.value);
+      if (isNaN(n0) === false) {
+        subtotal = n0;
+        return subtotal;
+      }
+    }
     if (pu && pu.amount && typeof pu.amount.value === "string") {
       let n = parseFloat(pu.amount.value);
       if (isNaN(n) === false) {
@@ -362,8 +369,15 @@ function hydrate_shipping_methods_section(sess) {
       selected_id = sess.shipping_methods.selected;
     }
     populate_shipping_select_from_options(options_array, selected_id);
-    update_summary_totals();
-    run_all_section_checks();
+    if (typeof set_session_purchase_unit_amount_breakdown === "function") {
+      set_session_purchase_unit_amount_breakdown(0).then(function () {
+        update_summary_totals();
+        run_all_section_checks();
+      });
+    } else {
+      update_summary_totals();
+      run_all_section_checks();
+    }
   });
 }
 
@@ -538,27 +552,13 @@ function billing_section_is_complete() {
   let state = get_trimmed_value_by_id("bill_state_input");
   let postal = get_trimmed_value_by_id("bill_postal_input");
   let country = get_trimmed_value_by_id("bill_country_input");
-  if (name.length === 0) {
-    return false;
-  }
-  if (phone.length === 0) {
-    return false;
-  }
-  if (a1.length === 0) {
-    return false;
-  }
-  if (city.length === 0) {
-    return false;
-  }
-  if (state.length === 0) {
-    return false;
-  }
-  if (postal.length === 0) {
-    return false;
-  }
-  if (country.length === 0) {
-    return false;
-  }
+  if (name.length === 0) return false;
+  if (phone.length === 0) return false;
+  if (a1.length === 0) return false;
+  if (city.length === 0) return false;
+  if (state.length === 0) return false;
+  if (postal.length === 0) return false;
+  if (country.length === 0) return false;
   return true;
 }
 
@@ -570,27 +570,13 @@ function shipping_info_section_is_complete() {
   let state = get_trimmed_value_by_id("ship_state_input");
   let postal = get_trimmed_value_by_id("ship_postal_input");
   let country = get_trimmed_value_by_id("ship_country_input");
-  if (name.length === 0) {
-    return false;
-  }
-  if (phone.length === 0) {
-    return false;
-  }
-  if (a1.length === 0) {
-    return false;
-  }
-  if (city.length === 0) {
-    return false;
-  }
-  if (state.length === 0) {
-    return false;
-  }
-  if (postal.length === 0) {
-    return false;
-  }
-  if (country.length === 0) {
-    return false;
-  }
+  if (name.length === 0) return false;
+  if (phone.length === 0) return false;
+  if (a1.length === 0) return false;
+  if (city.length === 0) return false;
+  if (state.length === 0) return false;
+  if (postal.length === 0) return false;
+  if (country.length === 0) return false;
   return true;
 }
 
@@ -685,17 +671,23 @@ function handle_input(event) {
 function handle_change(event) {
   let t = event.target;
 
-if (t && t.matches("#ship_method_select")) {
-  let patch = collect_shipping_methods_patch_from_dom();
-  set_session_shipping_methods(patch).then(function () {
-    update_summary_totals();
-    set_session_purchase_unit_shipping_from_top_level(0).then(function () {
-      run_all_section_checks();
+  if (t && t.matches("#ship_method_select")) {
+    let patch = collect_shipping_methods_patch_from_dom();
+    set_session_shipping_methods(patch).then(function () {
+      if (typeof set_session_purchase_unit_amount_breakdown === "function") {
+        set_session_purchase_unit_amount_breakdown(0).then(function () {
+          update_summary_totals();
+          set_session_purchase_unit_shipping_from_top_level(0);
+          run_all_section_checks();
+        });
+      } else {
+        update_summary_totals();
+        set_session_purchase_unit_shipping_from_top_level(0);
+        run_all_section_checks();
+      }
     });
-  });
-  return;
-}
-
+    return;
+  }
 }
 
 function init_checkout_page() {

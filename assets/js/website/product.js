@@ -491,7 +491,11 @@ function update_session_from_ui(product_object) {
 
       let basket_patch_object = { purchase_units: [pu] };
       set_session_basket(basket_patch_object).then(function () {
-        resolve(true);
+        if (typeof set_session_purchase_unit_amount_breakdown === "function") {
+          set_session_purchase_unit_amount_breakdown(0).then(function () { resolve(true); });
+        } else {
+          resolve(true);
+        }
       });
     });
   });

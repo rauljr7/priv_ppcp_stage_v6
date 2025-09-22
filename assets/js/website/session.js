@@ -21,6 +21,115 @@ function make_default_session() {
   return obj;
 }
 
+function compute_item_total_from_items(items) {
+  let total = 0;
+  if (Array.isArray(items) === true) {
+    for (let i = 0; i < items.length; i = i + 1) {
+      let it = items[i] || {};
+      let unit = 0;
+      if (it.unit_amount && typeof it.unit_amount.value === "string") {
+        let n = parseFloat(it.unit_amount.value);
+        if (isNaN(n) === false) unit = n;
+      }
+      let qty = 1;
+      if (typeof it.quantity !== "undefined") {
+        let qn = parseInt(String(it.quantity), 10);
+        if (isNaN(qn) === false && qn > 0) qty = qn;
+      }
+      total = total + unit * qty;
+    }
+  }
+  return Number(total.toFixed(2));
+}
+
+function get_selected_shipping_amount_from_session(sess) {
+  let id = "";
+  let options = [];
+  if (sess && sess.shipping_methods) {
+    if (typeof sess.shipping_methods.selected === "string") {
+      id = sess.shipping_methods.selected;
+    }
+    if (Array.isArray(sess.shipping_methods.options) === true) {
+      options = sess.shipping_methods.options;
+    }
+  }
+  if (!id || options.length === 0) return 0;
+
+  for (let i = 0; i < options.length; i = i + 1) {
+    let opt = options[i];
+    if (String(opt.id) === String(id)) {
+      if (opt.amount && typeof opt.amount.value === "string") {
+        let n = parseFloat(opt.amount.value);
+        return isNaN(n) ? 0 : n;
+      }
+      if (typeof opt.price === "string") {
+        let n2 = parseFloat(opt.price);
+        return isNaN(n2) ? 0 : n2;
+      }
+    }
+  }
+  return 0;
+}
+
+function set_session_purchase_unit_amount_breakdown(pu_index) {
+  return new Promise(function (resolve) {
+    ensure_website_session();
+    let sess = window.website_session || {};
+    let units = [];
+    if (typeof get_session_basket_purchase_units === "function") {
+      units = get_session_basket_purchase_units() || [];
+    } else if (sess.basket && Array.isArray(sess.basket.purchase_units) === true) {
+      units = sess.basket.purchase_units;
+    }
+
+    if (Array.isArray(units) === false || units.length === 0) {
+      resolve(false);
+      return;
+    }
+
+    let shipping_num = get_selected_shipping_amount_from_session(sess);
+
+    for (let i = 0; i < units.length; i = i + 1) {
+      let pu = units[i] || {};
+      let item_total_num = compute_item_total_from_items(pu.items || []);
+      let shipping_here = i === (typeof pu_index === "number" ? pu_index : 0) ? shipping_num : 0;
+      let total_num = Number((item_total_num + shipping_here).toFixed(2));
+
+      let currency = "USD";
+      if (Array.isArray(pu.items) === true && pu.items.length > 0) {
+        let it0 = pu.items[0];
+        if (it0 && it0.unit_amount && typeof it0.unit_amount.currency_code === "string" && it0.unit_amount.currency_code.length > 0) {
+          currency = it0.unit_amount.currency_code;
+        }
+      } else if (pu.amount && typeof pu.amount.currency_code === "string" && pu.amount.currency_code.length > 0) {
+        currency = pu.amount.currency_code;
+      }
+
+      pu.amount = pu.amount || {};
+      pu.amount.currency_code = currency;
+      pu.amount.value = total_num.toFixed(2);
+      pu.amount.breakdown = {
+        item_total: { currency_code: currency, value: item_total_num.toFixed(2) },
+        shipping:   { currency_code: currency, value: shipping_here.toFixed(2) }
+      };
+      units[i] = pu;
+    }
+
+    if (typeof set_session_basket_purchase_units === "function") {
+      set_session_basket_purchase_units(units).then(function () { resolve(true); });
+    } else {
+      if (!sess.basket) sess.basket = {};
+      sess.basket.purchase_units = units;
+      window.website_session = sess;
+      resolve(true);
+    }
+  });
+}
+
+function set_session_purchase_unit_amount_breakdown_all() {
+  return set_session_purchase_unit_amount_breakdown(0);
+}
+
 function is_plain_object(val) {
   if (val === null) {
     return false;
@@ -272,6 +381,7 @@ function set_session_purchase_unit_shipping_from_top_level(pu_index) {
     units[index_value] = pu;
 
     set_session_basket({ purchase_units: units }).then(function () {
+      set_session_purchase_unit_amount_breakdown(typeof pu_index === "number" ? pu_index : 0);
       resolve(pu.shipping);
     });
   });
