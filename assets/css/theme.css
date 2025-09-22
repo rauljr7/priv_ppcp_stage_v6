@@ -227,13 +227,6 @@ hr[data-label]::before {
 	white-space: nowrap;
 }
 
-[data-express-list] {
-	display: flex;
-	flex-direction: column;
-	gap: 10px;
-	width: 100%;
-}
-
 [data-express] {
 	border: 1px solid #e5e7eb;
 	background: #fff;
