@@ -19,3 +19,23 @@ async function getBrowserSafeClientToken() {
       throw err;
    });
 }
+
+async function createRedirectOrder() {
+    let local_storage_website_session = JSON.parse(localStorage.getItem("website_session"));
+    let orderPayload = {
+        intent: "CAPTURE"
+    };
+    orderPayload.purchase_units = local_storage_website_session.basket.purchase_units;
+  let base_url = "https://faas-sfo3-7872a1dd.doserverless.co/api/v1/web/fn-2b157b93-6e85-4f0d-b040-eccd1b257eef/default/ppcp-v6-endpoints";
+  let url = base_url + "?method=create_order";
+
+  let resp = await fetch(url, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    mode: "cors",
+    body: JSON.stringify(orderPayload)
+  });
+
+  let data = await resp.json();
+  return { orderId: data && typeof data.id === "string" ? data.id : "" };
+}
