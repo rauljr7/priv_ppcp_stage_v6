@@ -56,21 +56,17 @@
         const paypalButton = document.querySelector("#paypal-button");
 
         paypalButton.addEventListener("click", async () => {
-          const createOrderPromiseReference = createOrder();
+          const createOrderIdPromiseReference = createOrder();
           try {
-            const { redirectURL } = await paypalPaymentSession.start(
+            await paypalPaymentSession.start(
               { presentationMode: "direct-app-switch" },
-              createOrderPromiseReference,
+              createOrderIdPromiseReference,
             );
-            if (redirectURL) {
-              console.log(`redirectURL: ${redirectURL}`);
-              window.location.assign(redirectURL);
-            }
           } catch (error) {
             console.error(error);
-            const { redirectURL } = await paypalPaymentSession.start(
+            await paypalPaymentSession.start(
               { presentationMode: "auto" },
-              createOrderPromiseReference,
+              createOrderIdPromiseReference,
             );
           }
         });
