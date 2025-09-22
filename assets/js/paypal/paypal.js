@@ -1,0 +1,208 @@
+async function onPayPalWebSdkLoaded() {
+   try {
+      const clientToken = await getBrowserSafeClientToken();
+      const sdkInstance = await window.paypal.createInstance({
+         clientToken,
+         components: ["paypal-payments"],
+         pageType: "checkout",
+      });
+      const paypalPaymentSession = sdkInstance.createPayPalOneTimePaymentSession(
+         paymentSessionOptions,
+      );
+
+      if (paypalPaymentSession.hasReturned()) {
+         await paypalPaymentSession.resume();
+      } else {
+         setupPayPalButton(paypalPaymentSession);
+      }
+   } catch (error) {
+      console.error(error);
+   }
+}
+
+const paymentSessionOptions = {
+   async onApprove(data) {
+      console.log("onApprove", data);
+      const orderData = await captureOrder({
+         orderId: data.orderId,
+      });
+      console.log("Capture result", orderData);
+   },
+   onCancel(data) {
+      console.log("onCancel", data);
+   },
+   onError(error) {
+      console.log("onError", error);
+   },
+};
+
+async function setupPayPalButton(paypalPaymentSession) {
+   const enableAutoRedirect = document.querySelector("#enable-auto-redirect");
+   const paypalButton = document.querySelector("#paypal-button");
+   paypalButton.removeAttribute("hidden");
+
+   paypalButton.addEventListener("click", async () => {
+      const createOrderPromiseReference = createRedirectOrder();
+
+      try {
+         const {
+            redirectURL
+         } = await paypalPaymentSession.start({
+               presentationMode: "direct-app-switch",
+               autoRedirect: {
+                  enabled: enableAutoRedirect.checked,
+               },
+            },
+            createOrderPromiseReference,
+         );
+         if (redirectURL) {
+            console.log(`redirectURL: ${redirectURL}`);
+            window.location.assign(redirectURL);
+         }
+      } catch (error) {
+         console.error(error);
+         const {
+            redirectURL
+         } = await paypalPaymentSession.start({
+               presentationMode: "auto",
+               autoRedirect: {
+                  enabled: enableAutoRedirect.checked,
+               },
+            },
+            createOrderPromiseReference,
+         );
+      }
+   });
+}
+
+
+
+async function createRedirectOrder() {
+   let orderPayload = {
+      intent: "CAPTURE",
+      paymentSource: {
+         paypal: {
+            experienceContext: {
+               shippingPreference: "NO_SHIPPING",
+               userAction: "CONTINUE",
+               returnUrl: window.location.href,
+               cancelUrl: window.location.href
+            }
+         }
+      },
+      purchaseUnits: [{
+         amount: {
+            currencyCode: "USD",
+            value: "10.00",
+            breakdown: {
+               itemTotal: {
+                  currencyCode: "USD",
+                  value: "10.00"
+               }
+            }
+         }
+      }]
+   };
+
+   let body = map_order_payload_to_paypal(orderPayload);
+   let base_url = "https://faas-sfo3-7872a1dd.doserverless.co/api/v1/web/fn-2b157b93-6e85-4f0d-b040-eccd1b257eef/default/ppcp-v6-endpoints";
+   let url = base_url + "?method=create_order";
+
+   let resp = await fetch(url, {
+      method: "POST",
+      headers: {
+         "Content-Type": "application/json"
+      },
+      mode: "cors",
+      body: JSON.stringify(body)
+   });
+
+   let data = await resp.json();
+   return {
+      orderId: data && typeof data.id === "string" ? data.id : ""
+   };
+}
+
+function map_order_payload_to_paypal(src) {
+   let out = {};
+   out.intent = "CAPTURE";
+
+   if (src && src.paymentSource && src.paymentSource.paypal && src.paymentSource.paypal.experienceContext) {
+      let ec_src = src.paymentSource.paypal.experienceContext;
+      let ec_out = {};
+      if (typeof ec_src.shippingPreference === "string") {
+         ec_out.shipping_preference = ec_src.shippingPreference;
+      }
+      if (typeof ec_src.userAction === "string") {
+         ec_out.user_action = ec_src.userAction;
+      }
+      if (typeof ec_src.returnUrl === "string") {
+         ec_out.return_url = ec_src.returnUrl;
+      }
+      if (typeof ec_src.cancelUrl === "string") {
+         ec_out.cancel_url = ec_src.cancelUrl;
+      }
+      out.payment_source = {
+         paypal: {
+            experience_context: ec_out
+         }
+      };
+   }
+
+   out.purchase_units = [];
+   if (src && Array.isArray(src.purchaseUnits) === true) {
+      for (let i = 0; i < src.purchaseUnits.length; i = i + 1) {
+         let pu_src = src.purchaseUnits[i];
+         let pu_out = {};
+
+         if (pu_src && pu_src.amount) {
+            let amt_src = pu_src.amount;
+            let amt_out = {};
+            if (typeof amt_src.currencyCode === "string") {
+               amt_out.currency_code = amt_src.currencyCode;
+            }
+            if (typeof amt_src.value === "string") {
+               amt_out.value = amt_src.value;
+            }
+            if (amt_src.breakdown && amt_src.breakdown.itemTotal) {
+               let it_src = amt_src.breakdown.itemTotal;
+               let it_out = {};
+               if (typeof it_src.currencyCode === "string") {
+                  it_out.currency_code = it_src.currencyCode;
+               }
+               if (typeof it_src.value === "string") {
+                  it_out.value = it_src.value;
+               }
+               amt_out.breakdown = {
+                  item_total: it_out
+               };
+            }
+            pu_out.amount = amt_out;
+         }
+
+         out.purchase_units.push(pu_out);
+      }
+   }
+
+   return out;
+}
+
+async function captureOrder({
+   orderId
+}) {
+   const base_url = "https://faas-sfo3-7872a1dd.doserverless.co/api/v1/web/fn-2b157b93-6e85-4f0d-b040-eccd1b257eef/default/ppcp-v6-endpoints";
+   const url = base_url + "?method=capture_order";
+
+   const response = await fetch(url, {
+      method: "POST",
+      headers: {
+         "Content-Type": "application/json"
+      },
+      body: JSON.stringify({
+         id: orderId
+      })
+   });
+
+   const data = await response.json();
+   return data;
+}
