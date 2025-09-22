@@ -57,7 +57,7 @@
 
         document.addEventListener("click", async (event) => {
           console.log(event.target.tagName);
-          if (event.target.tagName === "paypal-button") {
+          if (event.target.tagName === "PAYPAL-BUTTON") {
             const createOrderIdPromiseReference = createOrder();
             try {
               await paypalPaymentSession.start(
