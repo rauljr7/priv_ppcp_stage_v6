@@ -61,10 +61,6 @@ async function setupPayPalButton(paypalPaymentSession) {
             );
         } catch (error) {
             console.error(error);
-            await paypalPaymentSession.start(
-            { presentationMode: "auto" },
-            createOrderIdPromiseReference,
-            );
         }
         }
     });
