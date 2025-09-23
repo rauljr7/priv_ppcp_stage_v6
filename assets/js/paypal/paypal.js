@@ -31,48 +31,6 @@ const paymentSessionOptions = {
         });
 
     },
-    onShippingAddressChange(data) {
-  console.log("onShippingAddressChange", data);
-
-  return new Promise(function (resolve, reject) {
-    var countryCode =
-      (data && data.shippingAddress && data.shippingAddress.countryCode) || "US";
-    if (countryCode !== "US") {
-      var msg =
-        (data && data.errors && data.errors.COUNTRY_ERROR) ||
-        "Unsupported country";
-      reject(new Error(msg));
-      return;
-    }
-
-    resolve([
-      {
-        id: "yolo",
-        label: "Yolo Shipping",
-        selected: false,
-        type: "SHIPPING",
-        amount: { currency_code: "USD", value: "0.00" }
-      },
-      {
-        id: "nono",
-        label: "Nono Shipping!!!",
-        selected: false,
-        type: "SHIPPING",
-        amount: { currency_code: "USD", value: "12.00" }
-      },
-      {
-        id: "dada",
-        label: "dada Shipping",
-        selected: true,
-        type: "SHIPPING",
-        amount: { currency_code: "USD", value: "25.00" }
-      }
-    ]);
-  });
-},
-    onShippingOptionsChange(data) {
-        console.log("onShippingOptionsChange", data);
-    },
     onCancel(data) {
         console.log("onCancel", data);
     },
