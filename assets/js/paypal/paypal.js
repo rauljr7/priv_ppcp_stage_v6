@@ -56,7 +56,7 @@ async function setupPayPalButton(paypalPaymentSession) {
         const createOrderIdPromiseReference = createOrder();
         try {
             await paypalPaymentSession.start(
-            { presentationMode: "direct-app-switch" },
+            { presentationMode: "auto" },
             createOrderIdPromiseReference,
             );
         } catch (error) {
