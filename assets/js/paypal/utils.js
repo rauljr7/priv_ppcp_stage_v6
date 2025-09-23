@@ -2,6 +2,8 @@ const get_client_token_endpoint = "https://faas-sfo3-7872a1dd.doserverless.co/ap
 const create_order_endpoint = "https://faas-sfo3-7872a1dd.doserverless.co/api/v1/web/fn-2b157b93-6e85-4f0d-b040-eccd1b257eef/default/ppcp-v6-endpoints?method=create_order";
 const capture_order_endpoint = "https://faas-sfo3-7872a1dd.doserverless.co/api/v1/web/fn-2b157b93-6e85-4f0d-b040-eccd1b257eef/default/ppcp-v6-endpoints?method=capture_order";
 
+let sdkInstance;
+
 async function getBrowserSafeClientToken() {
    return fetch(get_client_token_endpoint, {
       method: "GET",
@@ -47,4 +49,19 @@ async function captureOrder({ orderId }) {
 
   const data = await response.json();
   return data;
+}
+
+async function onPayPalWebSdkLoaded() {
+   try {
+      const clientToken = await getBrowserSafeClientToken();
+      sdkInstance = await window.paypal.createInstance({
+         clientToken,
+         components: ["paypal-payments", "venmo-payments"]
+      });
+   } catch (error) {
+      console.error(error);
+   }
+   if (typeof window.initPayPal === "function") {
+      window.initPayPal();
+   }
 }

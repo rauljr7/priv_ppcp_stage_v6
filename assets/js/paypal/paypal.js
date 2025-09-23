@@ -1,21 +1,10 @@
-async function onPayPalWebSdkLoaded() {
-    try {
-        const clientToken = await getBrowserSafeClientToken();
-        const sdkInstance = await window.paypal.createInstance({
-            clientToken,
-            components: ["paypal-payments"],
-            pageType: "checkout",
-        });
-        const paypalPaymentSession = sdkInstance.createPayPalOneTimePaymentSession(paymentSessionOptions);
-
-        if (paypalPaymentSession.hasReturned()) {
-            await paypalPaymentSession.resume();
-        } else {
-            setupPayPalButton(paypalPaymentSession);
-            window.remove_loading?.();
-        }
-    } catch (error) {
-        console.error(error);
+async function initPayPal() {
+    const paypalPaymentSession = sdkInstance.createPayPalOneTimePaymentSession(paymentSessionOptions);
+    if (paypalPaymentSession.hasReturned()) {
+        await paypalPaymentSession.resume();
+    } else {
+        setupPayPalButton(paypalPaymentSession);
+        window.remove_loading?.();
     }
 }
 
