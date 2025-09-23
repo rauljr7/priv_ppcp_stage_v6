@@ -32,7 +32,7 @@ const paymentSessionOptions = {
 
     },
     onShippingAddressChange(data) {
-        console.log("onShippingAddressChange", data);
+        console.log("onShippingAddressChangeeeeee", data);
 
         return [
                 {
