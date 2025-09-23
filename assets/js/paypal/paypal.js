@@ -40,37 +40,37 @@ const paymentSessionOptions = {
         }
 
         return [
-  {
-    "id": "yolo",
-    "label": "Yolo Shipping",
-    "selected": false,
-    "type": "SHIPPING",
-    "amount": {
-      "currency_code": "USD",
-      "value": "0.00"
-    }
-  },
-  {
-    "id": "nono",
-    "label": "Nono Shipping!!!",
-    "selected": false,
-    "type": "SHIPPING",
-    "amount": {
-      "currency_code": "USD",
-      "value": "12.00"
-    }
-  },
-  {
-    "id": "dada",
-    "label": "dada Shipping",
-    "selected": true,
-    "type": "SHIPPING",
-    "amount": {
-      "currency_code": "USD",
-      "value": "25.00"
-    }
-  }
-]
+                {
+                    "id": "yolo",
+                    "label": "Yolo Shipping",
+                    "selected": false,
+                    "type": "SHIPPING",
+                    "amount": {
+                    "currency_code": "USD",
+                    "value": "0.00"
+                    }
+                },
+                {
+                    "id": "nono",
+                    "label": "Nono Shipping!!!",
+                    "selected": false,
+                    "type": "SHIPPING",
+                    "amount": {
+                    "currency_code": "USD",
+                    "value": "12.00"
+                    }
+                },
+                {
+                    "id": "dada",
+                    "label": "dada Shipping",
+                    "selected": true,
+                    "type": "SHIPPING",
+                    "amount": {
+                    "currency_code": "USD",
+                    "value": "25.00"
+                    }
+                }
+                ]
     },
     onShippingOptionsChange(data) {
         console.log("onShippingOptionsChange", data);
@@ -88,7 +88,7 @@ const paymentSessionOptions = {
     },
 };
 
-async function setupPayPalButton(paypalPaymentSession) {
+function setupPayPalButton(paypalPaymentSession) {
     document.addEventListener("click", async (event) => {
         if (event.target.tagName === "PAYPAL-BUTTON") {
         if (get_session_basket_purchase_units_items().length < 1) {
