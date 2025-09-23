@@ -1,5 +1,8 @@
 async function initMessages() {
+    // Only required line is this one from the SDK:
     sdkInstance.createPayPalMessages();
+
+    // The rest of this doc is simply wiring up the total amount value to the element "amount" attribute, which you can construct any other way
     addAmountEventListener();
 
   // optional: set initial amount from session on first load

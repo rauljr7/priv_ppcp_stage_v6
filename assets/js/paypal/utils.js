@@ -56,7 +56,7 @@ async function onPayPalWebSdkLoaded() {
       const clientToken = await getBrowserSafeClientToken();
       sdkInstance = await window.paypal.createInstance({
          clientToken,
-         components: ["paypal-payments", "venmo-payments", "paypal-messages"]
+         components: ["paypal-payments", "paypal-messages"]
       });
    } catch (error) {
       console.error(error);
