@@ -34,11 +34,6 @@ const paymentSessionOptions = {
     onShippingAddressChange(data) {
         console.log("onShippingAddressChange", data);
 
-        const countryCode = data?.shippingAddress?.countryCode ?? "US";
-        if (countryCode !== "US") {
-            throw new Error(data?.errors?.COUNTRY_ERROR);
-        }
-
         return [
                 {
                     "id": "yolo",
@@ -74,11 +69,6 @@ const paymentSessionOptions = {
     },
     onShippingOptionsChange(data) {
         console.log("onShippingOptionsChange", data);
-
-        const selectedShippingOption = data?.selectedShippingOption?.id;
-        if (selectedShippingOption === "SHIP_UNV") {
-            throw new Error(data?.errors?.METHOD_UNAVAILABLE);
-        }
     },
     onCancel(data) {
         console.log("onCancel", data);
