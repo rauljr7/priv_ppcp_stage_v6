@@ -602,6 +602,8 @@ function persist_session_to_storage(session_obj) {
   try {
     let serialized = JSON.stringify(session_obj);
     localStorage.setItem(storage_key(), serialized);
+    let new_amount = get_session_basket_purchase_units()[0].amount.value;
+    notify_amount_listener(new_amount);
     return true;
   } catch (e) {
     return false;
@@ -939,6 +941,13 @@ function clear_session() {
   });
 }
 
+const WEBSITE_AMOUNT_EVENT = "website_session:amount";
+
+function notify_amount_listener(amount) {
+  // Pass the raw number/string; subscribers read from event.detail
+  window.dispatchEvent(new CustomEvent(WEBSITE_AMOUNT_EVENT, { detail: amount }));
+}
+
 /* explicit window exposure for this file */
 window.ensure_website_session = ensure_website_session;
 window.get_website_session = get_website_session;
@@ -979,6 +988,8 @@ document.addEventListener("DOMContentLoaded", function () {
         persist_session_to_storage(sess);
       } else {
         localStorage.setItem("website_session", JSON.stringify(sess));
+        let new_amount = get_session_basket_purchase_units()[0].amount.value;
+        notify_amount_listener(new_amount);
       }
     }
   } catch (e) {

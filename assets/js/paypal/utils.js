@@ -56,12 +56,15 @@ async function onPayPalWebSdkLoaded() {
       const clientToken = await getBrowserSafeClientToken();
       sdkInstance = await window.paypal.createInstance({
          clientToken,
-         components: ["paypal-payments", "venmo-payments"]
+         components: ["paypal-payments", "venmo-payments", "paypal-messages"]
       });
    } catch (error) {
       console.error(error);
    }
    if (typeof window.initPayPal === "function") {
       window.initPayPal();
+   }
+   if (typeof window.initMessages === "function") {
+      window.initMessages();
    }
 }
