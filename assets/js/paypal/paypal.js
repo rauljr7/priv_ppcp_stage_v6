@@ -31,6 +31,12 @@ const paymentSessionOptions = {
         });
 
     },
+    onShippingAddressChange(data) {
+    console.log("onShippingAddressChange", data);
+    },
+    onShippingOptionsChange(data) {
+        console.log("onShippingOptionsChange", data);
+    },
     onCancel(data) {
         console.log("onCancel", data);
     },
