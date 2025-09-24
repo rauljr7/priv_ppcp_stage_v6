@@ -1,38 +1,11 @@
 async function initPayPal() {
-    const paypalPaymentSession = sdkInstance.createPayPalOneTimePaymentSession(paymentSessionOptions);
+    const paypalPaymentSession = sdkInstance.createPayPalOneTimePaymentSession(paymentSessionOptions("paypal"));
     if (paypalPaymentSession.hasReturned()) {
         await paypalPaymentSession.resume();
     } else {
         setupPayPalButton(paypalPaymentSession);
-        window.remove_loading?.();
     }
 }
-
-const paymentSessionOptions = {
-    async onApprove(data) {
-        const orderData = await captureOrder({
-            orderId: data.orderId,
-        });
-        run_loading();
-        set_session_transaction_payload(orderData).then(() => {
-            let sid = get_session_id();
-            window.location.assign(`receipt.html?session=${encodeURIComponent(sid)}`);
-        });
-
-    },
-    onShippingAddressChange(data) {
-    console.log("onShippingAddressChange", data);
-    },
-    onShippingOptionsChange(data) {
-        console.log("onShippingOptionsChange", data);
-    },
-    onCancel(data) {
-        console.log("onCancel", data);
-    },
-    onError(error) {
-        console.log("onError", error);
-    },
-};
 
 async function setupPayPalButton(paypalPaymentSession) {
     document.addEventListener("click", async (event) => {
@@ -53,4 +26,5 @@ async function setupPayPalButton(paypalPaymentSession) {
         }
         }
     });
+    window.remove_loading?.({ id: "paypal" });
 }

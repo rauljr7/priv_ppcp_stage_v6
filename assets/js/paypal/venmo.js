@@ -4,7 +4,7 @@ async function initVenmo() {
     });
 if (paymentMethods.isEligible("venmo")) {
     const venmoPaymentSession = sdkInstance.createVenmoOneTimePaymentSession(
-        paymentSessionOptions,
+        paymentSessionOptions("venmo"),
     );
 
     document.addEventListener("click", async (event) => {
@@ -25,6 +25,7 @@ if (paymentMethods.isEligible("venmo")) {
                 console.error(error);
             }
         }
+        window.remove_loading?.({ id: "venmo" });
     });
 }
 }

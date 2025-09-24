@@ -23,6 +23,35 @@ async function getBrowserSafeClientToken() {
    });
 }
 
+function paymentSessionOptions(payment_Type) {
+    let paymentSessionOptions = {
+        async onApprove(data) {
+            const orderData = await captureOrder({
+                orderId: data.orderId,
+            });
+            run_loading({id: payment_Type});
+            set_session_transaction_payload(orderData).then(() => {
+                let sid = get_session_id();
+                window.location.assign(`receipt.html?session=${encodeURIComponent(sid)}`);
+            });
+
+        },
+        onShippingAddressChange(data) {
+        console.log("onShippingAddressChange", data);
+        },
+        onShippingOptionsChange(data) {
+            console.log("onShippingOptionsChange", data);
+        },
+        onCancel(data) {
+            console.log("onCancel", data);
+        },
+        onError(error) {
+            console.log("onError", error);
+        },
+    };
+    return paymentSessionOptions;
+}
+
 async function createOrder(payment_type) {
    let local_storage_website_session = JSON.parse(localStorage.getItem("website_session"));
    let orderPayload = {
