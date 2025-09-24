@@ -1,5 +1,7 @@
 async function initPayPal() {
-    window.run_loading({id: "paypal-button", message: "Loading PayPal...", check_element_exists: true});
+    if (!document.querySelector('paypal-button')) return;
+    
+    window.run_loading({id: "paypal-button", message: "Loading PayPal..."});
     const paypalPaymentSession = sdkInstance.createPayPalOneTimePaymentSession(paymentSessionOptions("paypal"));
     if (paypalPaymentSession.hasReturned()) {
         await paypalPaymentSession.resume();

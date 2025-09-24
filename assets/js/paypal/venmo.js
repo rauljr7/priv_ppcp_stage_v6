@@ -1,5 +1,8 @@
 async function initVenmo() {
-    window.run_loading({id: "venmo-button", message: "Loading Venmo...", check_element_exists: true});
+    if (!document.querySelector('venmo-button')) return;
+
+    window.run_loading({id: "venmo-button", message: "Loading Venmo..."});
+
     let paymentMethods = await sdkInstance.findEligibleMethods({
         currencyCode: "USD",
     });

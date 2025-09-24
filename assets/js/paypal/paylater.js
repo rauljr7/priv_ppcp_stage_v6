@@ -1,5 +1,7 @@
 async function initPayLater() {
-    window.run_loading({id: "paypal-pay-later-button", message: "Loading PayLater...", check_element_exists: true});
+    if (!document.querySelector('paypal-pay-later-button')) return;
+
+    window.run_loading({id: "paypal-pay-later-button", message: "Loading PayLater..."});
     const paylaterPaymentSession = sdkInstance.createPayPalOneTimePaymentSession(paymentSessionOptions("paypal"));
     if (paylaterPaymentSession.hasReturned()) {
         await paylaterPaymentSession.resume();
