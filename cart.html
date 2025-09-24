@@ -10,6 +10,9 @@
   <link rel="stylesheet" href="assets/css/layout.css">
   <link rel="stylesheet" href="assets/css/cart.css">
   <script src="assets/js/website/loading.js"></script>
+  <script>
+    run_loading({id:"cart", message: "Loading..."});
+  </script>
   <style>
     paypal-button, venmo-button, paypal-pay-later-button {
       width: 100%;
@@ -120,5 +123,8 @@
   <script src="assets/js/paypal/paylater.js" defer></script>
   <script src="assets/js/paypal/utils.js" defer></script>
   <script src="https://www.sandbox.paypal.com/web-sdk/v6/core" onload="onPayPalWebSdkLoaded()" defer></script>
+  <script>
+    remove_loading({id:"cart"});
+  </script>
 </body>
 </html>

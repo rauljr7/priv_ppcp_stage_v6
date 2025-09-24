@@ -8,6 +8,9 @@
   <link rel="stylesheet" href="assets/css/theme.css">
   <link rel="stylesheet" href="assets/css/nav.css">
   <link rel="stylesheet" href="assets/css/layout.css">
+  <script>
+    run_loading({id:"product", message: "Loading..."});
+  </script>
   <style id="product.css">
     .image_frame {
       background: #e5e7eb;
@@ -115,5 +118,8 @@
   <script src="assets/js/paypal/paylater.js" defer></script>
   <script src="assets/js/paypal/utils.js" defer></script>
   <script src="https://www.sandbox.paypal.com/web-sdk/v6/core" onload="onPayPalWebSdkLoaded()" defer></script>
+  <script>
+    remove_loading({id:"product"});
+  </script>
 </body>
 </html>
