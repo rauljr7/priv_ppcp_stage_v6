@@ -9,7 +9,7 @@ async function initMessages() {
         let unit_amount = get_session_basket_purchase_units()[0].items[0].unit_amount.value;
         let notify_payload = { total_amount: total_amount, unit_amount: unit_amount };
         console.log(notify_payload);
-        notify_amount_listener(notify_payload);
+        setMessagesAmount(notify_payload);
       },
     });
 
@@ -25,6 +25,7 @@ function addAmountEventListener() {
 }
 
 function setMessagesAmount(payload) {
+  console.log("going to set messages amount");
   let total = payload && payload.total_amount;
   let unit = payload && payload.unit_amount;
   if (typeof total === "undefined" || total === null) total = "";
@@ -32,6 +33,7 @@ function setMessagesAmount(payload) {
 
   let els = document.querySelectorAll("paypal-message");
   els.forEach(function (el) {
+  console.log("iterating through messages amount");
     let locAttr = el.getAttribute("location");
     let loc = "";
     if (typeof locAttr === "string") loc = locAttr.toLowerCase();
