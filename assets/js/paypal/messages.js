@@ -7,8 +7,10 @@ async function initMessages() {
 
   // Optionally, set initial amount from session on first load (PayPal has autoload already)
   try {
-    let initial_amount = get_session_basket_purchase_units()[0].amount.value;
-    setMessagesAmount(initial_amount);
+    let total_amount = get_session_basket_purchase_units()[0].amount.value;
+    let unit_amount = get_session_basket_purchase_units()[0].items[0].unit_amount.value;
+    let notify_payload = { total_amount: total_amount, unit_amount: unit_amount };
+    setMessagesAmount(notify_payload);
   } catch {}
 }
 
