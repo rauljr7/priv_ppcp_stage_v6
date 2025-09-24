@@ -1,6 +1,12 @@
 async function initMessages() {
     // Only required line is this one from the SDK:
-    sdkInstance.createPayPalMessages();
+    const messagesInstance = sdkInstance.createPayPalMessages();
+      const content = await messagesInstance.fetchContent({
+      onReady: (content) => {
+        console.log(content);
+        update_session_from_ui(current_product_object);
+      },
+    });
 
     // The rest of this doc is simply wiring up the total amount value to the element "amount" attribute, which you can construct any other way
     addAmountEventListener();
