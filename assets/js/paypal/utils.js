@@ -97,4 +97,7 @@ async function onPayPalWebSdkLoaded() {
    if (typeof window.initVenmo === "function") {
       window.initVenmo();
    }
+   if (typeof window.initPayLater === "function") {
+      window.initPayLater();
+   }
 }
