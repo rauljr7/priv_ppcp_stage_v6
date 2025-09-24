@@ -602,8 +602,10 @@ function persist_session_to_storage(session_obj) {
   try {
     let serialized = JSON.stringify(session_obj);
     localStorage.setItem(storage_key(), serialized);
-    let new_amount = get_session_basket_purchase_units()[0].amount.value;
-    notify_amount_listener(new_amount);
+    let total_amount = get_session_basket_purchase_units()[0].amount.value;
+    let unit_amount = get_session_basket_purchase_units()[0].items[0].unit_amount.value;
+    let notify_payload = { total_amount: total_amount, unit_amount: unit_amount };
+    notify_amount_listener(notify_payload);
     return true;
   } catch (e) {
     return false;
@@ -943,10 +945,19 @@ function clear_session() {
 
 const WEBSITE_AMOUNT_EVENT = "website_session:amount";
 
-function notify_amount_listener(amount) {
-  // Pass the raw number/string; subscribers read from event.detail
-  window.dispatchEvent(new CustomEvent(WEBSITE_AMOUNT_EVENT, { detail: amount }));
+function notify_amount_listener(payload) {
+  try {
+    const detail = (payload && typeof payload === "object")
+      ? {
+          total_amount: String(payload.total_amount ?? ""),
+          unit_amount: String(payload.unit_amount ?? payload.total_amount ?? "")
+        }
+      : { total_amount: String(payload ?? ""), unit_amount: String(payload ?? "") };
+
+    window.dispatchEvent(new CustomEvent(WEBSITE_AMOUNT_EVENT, { detail }));
+  } catch (_) {}
 }
+
 
 /* explicit window exposure for this file */
 window.ensure_website_session = ensure_website_session;
@@ -988,8 +999,10 @@ document.addEventListener("DOMContentLoaded", function () {
         persist_session_to_storage(sess);
       } else {
         localStorage.setItem("website_session", JSON.stringify(sess));
-        let new_amount = get_session_basket_purchase_units()[0].amount.value;
-        notify_amount_listener(new_amount);
+        let total_amount = get_session_basket_purchase_units()[0].amount.value;
+        let unit_amount = get_session_basket_purchase_units()[0].items[0].unit_amount.value;
+        let notify_payload = { total_amount: total_amount, unit_amount: unit_amount };
+        notify_amount_listener(notify_payload);
       }
     }
   } catch (e) {
