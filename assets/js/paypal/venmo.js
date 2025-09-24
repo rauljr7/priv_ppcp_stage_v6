@@ -27,7 +27,7 @@ if (paymentMethods.isEligible("venmo")) {
                 window.remove_loading?.({ id: "venmo" });
             }
         }
-        window.remove_loading?.({ id: "venmo" });
     });
+    window.remove_loading?.({ id: "venmo" });
 }
 }
