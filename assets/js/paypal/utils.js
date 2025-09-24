@@ -29,7 +29,7 @@ function paymentSessionOptions(payment_Type) {
             const orderData = await captureOrder({
                 orderId: data.orderId,
             });
-            run_loading({id: payment_Type});
+            run_loading({id: payment_Type, message: "Processing Payment..."});
             set_session_transaction_payload(orderData).then(() => {
                 let sid = get_session_id();
                 window.location.assign(`receipt.html?session=${encodeURIComponent(sid)}`);

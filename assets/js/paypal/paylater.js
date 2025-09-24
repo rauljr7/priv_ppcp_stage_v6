@@ -1,5 +1,5 @@
 async function initPayLater() {
-    //window.run_loading({id: "paylater"});
+    window.run_loading({id: "paylater", message: "Loading..."});
     const paylaterPaymentSession = sdkInstance.createPayPalOneTimePaymentSession(paymentSessionOptions("paypal"));
     if (paylaterPaymentSession.hasReturned()) {
         await paylaterPaymentSession.resume();
@@ -37,9 +37,9 @@ async function setupPayLaterButton(sdkInstance, paylaterPaymentMethodDetails) {
             );
         } catch (error) {
             console.error(error);
-            //window.remove_loading?.({ id: "paylater" });
+            window.remove_loading?.({ id: "paylater" });
         }
         }
     });
-    //window.remove_loading?.({ id: "paylater" });
+    window.remove_loading?.({ id: "paylater" });
 }

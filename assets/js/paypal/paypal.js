@@ -1,5 +1,5 @@
 async function initPayPal() {
-    //window.run_loading({id: "paypal"});
+    window.run_loading({id: "paypal", message: "Loading..."});
     const paypalPaymentSession = sdkInstance.createPayPalOneTimePaymentSession(paymentSessionOptions("paypal"));
     if (paypalPaymentSession.hasReturned()) {
         await paypalPaymentSession.resume();
@@ -24,9 +24,9 @@ async function setupPayPalButton(paypalPaymentSession) {
             );
         } catch (error) {
             console.error(error);
-            //window.remove_loading?.({ id: "paypal" });
+            window.remove_loading?.({ id: "paypal" });
         }
         }
     });
-    //window.remove_loading?.({ id: "paypal" });
+    window.remove_loading?.({ id: "paypal" });
 }
