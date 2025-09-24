@@ -2,18 +2,16 @@ async function initMessages() {
     // Only required line is this one from the SDK:
     const messagesInstance = sdkInstance.createPayPalMessages();
     addAmountEventListener();
-    let total_amount = get_session_basket_purchase_units()[0].amount.value;
-    let unit_amount = get_session_basket_purchase_units()[0].items[0].unit_amount.value;
-    let notify_payload = { total_amount: total_amount, unit_amount: unit_amount };
-    notify_amount_listener(notify_payload);
 
-/*     const content = await messagesInstance.fetchContent({
+    const content = await messagesInstance.fetchContent({
       onReady: (content) => {
-        console.log(content);
-        console.log(current_product_object);
-        update_session_from_ui(current_product_object);
+        let total_amount = get_session_basket_purchase_units()[0].amount.value;
+        let unit_amount = get_session_basket_purchase_units()[0].items[0].unit_amount.value;
+        let notify_payload = { total_amount: total_amount, unit_amount: unit_amount };
+        console.log(notify_payload);
+        notify_amount_listener(notify_payload);
       },
-    }); */
+    });
 
     // The rest of this doc is simply wiring up the total amount value to the element "amount" attribute, which you can construct any other way
 }
