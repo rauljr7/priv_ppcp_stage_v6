@@ -17,13 +17,13 @@ async function initPayLater() {
 async function setupPayLaterButton(sdkInstance, paylaterPaymentMethodDetails) {
   const paylaterPaymentSession = sdkInstance.createPayLaterOneTimePaymentSession(paymentSessionOptions);
   const { productCode, countryCode } = paylaterPaymentMethodDetails;
-  const paylaterButton = document.querySelector("paylater-button");
+  const paylaterButton = document.querySelector("paypal-pay-later-button");
 
   paylaterButton.productCode = productCode;
   paylaterButton.countryCode = countryCode;
 
     document.addEventListener("click", async (event) => {
-        if (event.target.tagName === "PAYLATER-BUTTON") {
+        if (event.target.tagName === "PAYPAL-PAY-LATER-BUTTON") {
         if (get_session_basket_purchase_units_items().length < 1) {
             await update_session_from_ui(current_product_object).then(function () {
                 update_add_to_cart_cta_based_on_cart();
