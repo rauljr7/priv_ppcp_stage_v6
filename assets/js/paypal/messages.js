@@ -5,7 +5,7 @@ async function initMessages() {
 
     
     // The rest of this doc is simply wiring up the total amount value to the element "amount" attribute, which you can construct any other way
-    const content = await messagesInstance.fetchContent({
+    await messagesInstance.fetchContent({
       onReady: (content) => {
       },
     }).then(() => {
