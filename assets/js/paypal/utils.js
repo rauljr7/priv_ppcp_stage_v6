@@ -23,16 +23,20 @@ async function getBrowserSafeClientToken() {
    });
 }
 
-async function createOrder() {
-    let local_storage_website_session = JSON.parse(localStorage.getItem("website_session"));
-    let orderPayload = {
-        intent: "CAPTURE"
-    };
-    // https://developer.paypal.com/docs/api/orders/v2/#orders_create
-    // https://developer.paypal.com/docs/api/orders/v2/#orders_create!ct=application/json&path=purchase_units&t=request
-    orderPayload.purchase_units = local_storage_website_session.basket.purchase_units;
+async function createOrder(payment_type) {
+   let local_storage_website_session = JSON.parse(localStorage.getItem("website_session"));
+   let orderPayload = {
+      intent: "CAPTURE"
+   };
+   // https://developer.paypal.com/docs/api/orders/v2/#orders_create
+   // https://developer.paypal.com/docs/api/orders/v2/#orders_create!ct=application/json&path=purchase_units&t=request
+   orderPayload.purchase_units = local_storage_website_session.basket.purchase_units;
 
-  let resp = await fetch(create_order_endpoint, {
+   let payment_method_query = "";
+   if (payment_type) {
+      payment_method_query = "&payment_type=" + payment_type;
+   }
+  let resp = await fetch(create_order_endpoint + payment_method_query, {
     method: "POST", headers: { "Content-Type": "application/json" }, mode: "cors",
     body: JSON.stringify(orderPayload)
   });
@@ -56,7 +60,7 @@ async function onPayPalWebSdkLoaded() {
       const clientToken = await getBrowserSafeClientToken();
       sdkInstance = await window.paypal.createInstance({
          clientToken,
-         components: ["paypal-payments", "paypal-messages"]
+         components: ["paypal-payments", "paypal-messages", "venmo-payments"]
       });
    } catch (error) {
       console.error(error);
@@ -66,5 +70,8 @@ async function onPayPalWebSdkLoaded() {
    }
    if (typeof window.initMessages === "function") {
       window.initMessages();
+   }
+   if (typeof window.initVenmo === "function") {
+      window.initVenmo();
    }
 }
