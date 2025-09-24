@@ -1,5 +1,5 @@
 async function initPayLater() {
-    window.run_loading({id: "paylater", message: "Loading..."});
+    window.run_loading({id: "paylater", message: "Loading PayLater..."});
     const paylaterPaymentSession = sdkInstance.createPayPalOneTimePaymentSession(paymentSessionOptions("paypal"));
     if (paylaterPaymentSession.hasReturned()) {
         await paylaterPaymentSession.resume();

@@ -1,5 +1,5 @@
 async function initVenmo() {
-    window.run_loading({id: "venmo", message: "Loading..."});
+    window.run_loading({id: "venmo", message: "Loading Venmo..."});
     let paymentMethods = await sdkInstance.findEligibleMethods({
         currencyCode: "USD",
     });
