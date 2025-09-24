@@ -14,24 +14,24 @@ async function initMessages() {
 
 function addAmountEventListener() {
   window.addEventListener("website_session:amount", function (e) {
-    var payload = e && e.detail;
+    let payload = e && e.detail;
     if (!payload) return;
     setMessagesAmount(payload);
   });
 }
 
 function setMessagesAmount(payload) {
-  var total = payload && payload.total_amount;
-  var unit = payload && payload.unit_amount;
+  let total = payload && payload.total_amount;
+  let unit = payload && payload.unit_amount;
   if (typeof total === "undefined" || total === null) total = "";
   if (typeof unit === "undefined" || unit === null) unit = total;
 
-  var els = document.querySelectorAll("paypal-message");
+  let els = document.querySelectorAll("paypal-message");
   els.forEach(function (el) {
-    var locAttr = el.getAttribute("location");
-    var loc = "";
+    let locAttr = el.getAttribute("location");
+    let loc = "";
     if (typeof locAttr === "string") loc = locAttr.toLowerCase();
-    var valueToUse = total;
+    let valueToUse = total;
     if (loc === "product") valueToUse = unit;
     el.setAttribute("amount", String(valueToUse));
   });
