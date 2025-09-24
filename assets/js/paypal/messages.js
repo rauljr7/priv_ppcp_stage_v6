@@ -4,6 +4,7 @@ async function initMessages() {
       const content = await messagesInstance.fetchContent({
       onReady: (content) => {
         console.log(content);
+        console.log(current_product_object);
         update_session_from_ui(current_product_object);
       },
     });
