@@ -4,9 +4,6 @@ async function initMessages() {
 
     // The rest of this doc is simply wiring up the total amount value to the element "amount" attribute, which you can construct any other way
     addAmountEventListener();
-
-  // Optionally, set initial amount from session on first load (PayPal has autoload already)
-  update_session_from_ui(current_product_object);
 }
 
 function addAmountEventListener() {
