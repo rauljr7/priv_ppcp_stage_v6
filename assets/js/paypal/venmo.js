@@ -1,5 +1,5 @@
 async function initVenmo() {
-    window.run_loading({id: "venmo", message: "Loading Venmo..."});
+    window.run_loading({id: "venmo-button", message: "Loading Venmo...", check_element_exists: true});
     let paymentMethods = await sdkInstance.findEligibleMethods({
         currencyCode: "USD",
     });
@@ -24,10 +24,10 @@ if (paymentMethods.isEligible("venmo")) {
                 );
             } catch (error) {
                 console.error(error);
-                window.remove_loading?.({ id: "venmo" });
+                window.remove_loading?.({ id: "venmo-button" });
             }
         }
     });
-    window.remove_loading?.({ id: "venmo" });
+    window.remove_loading?.({ id: "venmo-button" });
 }
 }

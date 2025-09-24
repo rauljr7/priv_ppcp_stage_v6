@@ -155,11 +155,17 @@ function update_overlay_from_ledger() {
 
 /* ===================== Public API ===================== */
 
-function run_loading(opts = {}) {
-  const id = typeof opts.id === "string" && opts.id.trim()
-    ? opts.id.trim()
-    : ("ldg_" + Math.random().toString(36).slice(2));
+const ALLOWED_LOADING_IDS = ["paypal-button", "paypal-pay-later-button", "venmo-button"];
 
+function run_loading(opts = {}) {
+  const providedId = typeof opts.id === "string" ? opts.id.trim() : "";
+  const shouldCheck = opts.check_element_exists === true;
+
+  if (shouldCheck && providedId && !ALLOWED_LOADING_IDS.includes(providedId)) {
+    return false;
+  }
+
+  const id = providedId || ("ldg_" + Math.random().toString(36).slice(2));
   const message = typeof opts.message === "string" ? opts.message : "";
 
   ledger_upsert({ id, message, opts, ts: Date.now() });
