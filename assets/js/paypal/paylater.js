@@ -15,7 +15,7 @@ async function initPayLater() {
 }
 
 async function setupPayLaterButton(sdkInstance, paylaterPaymentMethodDetails) {
-  const paylaterPaymentSession = sdkInstance.createPayLaterOneTimePaymentSession(paymentSessionOptions);
+  const paylaterPaymentSession = sdkInstance.createPayLaterOneTimePaymentSession(paymentSessionOptions("paypal"));
   const { productCode, countryCode } = paylaterPaymentMethodDetails;
   const paylaterButton = document.querySelector("paypal-pay-later-button");
 
