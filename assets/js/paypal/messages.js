@@ -9,8 +9,8 @@ async function initMessages() {
       onReady: (content) => {
       },
     }).then(() => {
-        let total_amount = get_session_basket_purchase_units()[0].amount.value || 10;
-        let unit_amount = get_session_basket_purchase_units()[0].items[0].unit_amount.value || 10;
+        let total_amount = get_session_basket_purchase_units()[0]?.amount?.value || 10;
+        let unit_amount = get_session_basket_purchase_units()[0]?.items[0]?.unit_amount?.value || 10;
         let notify_payload = { total_amount: total_amount, unit_amount: unit_amount };
         setMessagesAmount(notify_payload);
     });
