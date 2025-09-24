@@ -3,17 +3,18 @@ async function initMessages() {
     const messagesInstance = sdkInstance.createPayPalMessages();
     addAmountEventListener();
 
+    
+    // The rest of this doc is simply wiring up the total amount value to the element "amount" attribute, which you can construct any other way
     const content = await messagesInstance.fetchContent({
       onReady: (content) => {
+      },
+    }).then(() => {
         let total_amount = get_session_basket_purchase_units()[0].amount.value;
         let unit_amount = get_session_basket_purchase_units()[0].items[0].unit_amount.value;
         let notify_payload = { total_amount: total_amount, unit_amount: unit_amount };
-        console.log(notify_payload);
         setMessagesAmount(notify_payload);
-      },
     });
 
-    // The rest of this doc is simply wiring up the total amount value to the element "amount" attribute, which you can construct any other way
 }
 
 function addAmountEventListener() {
@@ -25,7 +26,6 @@ function addAmountEventListener() {
 }
 
 function setMessagesAmount(payload) {
-  console.log("going to set messages amount");
   let total = payload && payload.total_amount;
   let unit = payload && payload.unit_amount;
   if (typeof total === "undefined" || total === null) total = "";
@@ -33,7 +33,6 @@ function setMessagesAmount(payload) {
 
   let els = document.querySelectorAll("paypal-message");
   els.forEach(function (el) {
-  console.log("iterating through messages amount");
     let locAttr = el.getAttribute("location");
     let loc = "";
     if (typeof locAttr === "string") loc = locAttr.toLowerCase();
