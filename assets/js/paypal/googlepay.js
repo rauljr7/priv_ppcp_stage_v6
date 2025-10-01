@@ -51,14 +51,11 @@ async function getGooglePaymentDataRequest(purchaseAmount, googlePayConfig) {
   paymentDataRequest.shippingOptionRequired  = true;
   paymentDataRequest.shippingAddressRequired = true;
   paymentDataRequest.shippingAddressParameters = {
-        allowedCountryCodes: ['US'],
-        phoneNumberRequired: true
-    };
+    allowedCountryCodes: ['US'],
+    phoneNumberRequired: true
+  };
   paymentDataRequest.shippingOptionParameters = {
-    shippingOptions: window.website_shipping_options.map((o,i)=>(
-      { id:`${String(i+1).padStart(3,"0")}`,
-      label:`$${(parseFloat(o.price)||0).toFixed(2)}`
-    }))
+    shippingOptions: window.website_shipping_options.map((o,i)=>({ id:(o.id||String(i+1).padStart(3,"0")), label:(o.name||`Option ${i+1}`) }))
   };
   if (get_session_selected_shipping_id() !== "") {
     paymentDataRequest.shippingOptionParameters.defaultSelectedOptionId = get_session_selected_shipping_id();

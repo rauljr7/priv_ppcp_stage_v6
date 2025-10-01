@@ -121,10 +121,8 @@ function set_session_purchase_unit_shipping_from_top_level(pu_index) {
     ensure_website_session();
 
     let index_value = 0;
-    if (typeof pu_index === "number") {
-      if (pu_index >= 0) {
-        index_value = pu_index;
-      }
+    if (typeof pu_index === "number" && pu_index >= 0) {
+      index_value = pu_index;
     }
 
     let pu = ensure_purchase_unit_index(index_value);
@@ -138,35 +136,24 @@ function set_session_purchase_unit_shipping_from_top_level(pu_index) {
     let options_src = [];
     if (sess && sess.shipping_methods && Array.isArray(sess.shipping_methods.options) === true && sess.shipping_methods.options.length > 0) {
       options_src = sess.shipping_methods.options;
-    } else {
-      if (typeof get_website_shipping_options === "function") {
-        let site_opts = get_website_shipping_options();
-        if (Array.isArray(site_opts) === true) {
-          options_src = site_opts;
-        }
-      } else {
-        if (Array.isArray(window.website_shipping_options) === true) {
-          options_src = window.website_shipping_options;
-        }
-      }
+    } else if (typeof get_website_shipping_options === "function") {
+      let site_opts = get_website_shipping_options();
+      if (Array.isArray(site_opts) === true) options_src = site_opts;
+    } else if (Array.isArray(window.website_shipping_options) === true) {
+      options_src = window.website_shipping_options;
     }
 
     let options_out = [];
     for (let i = 0; i < options_src.length; i = i + 1) {
-      let opt = options_src[i];
+      let opt = options_src[i] || {};
 
       let id_val = "";
-      if (typeof opt.id === "string" && opt.id.length > 0) {
-        id_val = opt.id;
-      } else if (typeof opt.name === "string") {
-        let name_l = opt.name.toLowerCase();
-        if (name_l.indexOf("free") > -1) {
-          id_val = "free";
-        } else if (name_l.indexOf("standard") > -1) {
-          id_val = "standard";
-        } else if (name_l.indexOf("express") > -1) {
-          id_val = "express";
-        }
+      if (typeof opt.id === "string" && opt.id.trim().length > 0) {
+        id_val = opt.id.trim();
+      } else if (typeof opt.name === "string" && opt.name.trim().length > 0) {
+        id_val = opt.name.trim().toLowerCase().replace(/\s+/g, "-").replace(/[^a-z0-9\-]/g, "");
+      } else {
+        id_val = "opt-" + (i + 1);
       }
 
       let label_val = "";
@@ -189,7 +176,7 @@ function set_session_purchase_unit_shipping_from_top_level(pu_index) {
 
       let is_selected = false;
       if (typeof selected_id === "string" && selected_id.length > 0) {
-        if (id_val === selected_id) {
+        if (String(id_val) === String(selected_id)) {
           is_selected = true;
         }
       }
@@ -211,6 +198,7 @@ function set_session_purchase_unit_shipping_from_top_level(pu_index) {
       for (let k = 0; k < options_out.length; k = k + 1) {
         if (options_out[k].selected === true) {
           any_selected = true;
+          break;
         }
       }
       if (any_selected === false) {
@@ -241,11 +229,9 @@ function set_session_purchase_unit_shipping_from_top_level(pu_index) {
     let country_code_val = "1";
     let national_number_val = digits;
 
-    if (digits.length === 11) {
-      if (digits.charAt(0) === "1") {
-        country_code_val = "1";
-        national_number_val = digits.substring(1);
-      }
+    if (digits.length === 11 && digits.charAt(0) === "1") {
+      country_code_val = "1";
+      national_number_val = digits.substring(1);
     } else if (digits.length === 10) {
       country_code_val = "1";
       national_number_val = digits;
@@ -259,36 +245,19 @@ function set_session_purchase_unit_shipping_from_top_level(pu_index) {
     let country = "";
 
     if (sess && sess.shipping_information) {
-      if (typeof sess.shipping_information.address_line_1 === "string") {
-        addr1 = sess.shipping_information.address_line_1;
-      }
-      if (typeof sess.shipping_information.address_line_2 === "string") {
-        addr2 = sess.shipping_information.address_line_2;
-      }
-      if (typeof sess.shipping_information.city === "string") {
-        city = sess.shipping_information.city;
-      }
-      if (typeof sess.shipping_information.state_province === "string") {
-        state = sess.shipping_information.state_province;
-      }
-      if (typeof sess.shipping_information.postal_code === "string") {
-        postal = sess.shipping_information.postal_code;
-      }
-      if (typeof sess.shipping_information.country === "string") {
-        country = sess.shipping_information.country;
-      }
+      if (typeof sess.shipping_information.address_line_1 === "string") addr1 = sess.shipping_information.address_line_1;
+      if (typeof sess.shipping_information.address_line_2 === "string") addr2 = sess.shipping_information.address_line_2;
+      if (typeof sess.shipping_information.city === "string") city = sess.shipping_information.city;
+      if (typeof sess.shipping_information.state_province === "string") state = sess.shipping_information.state_province;
+      if (typeof sess.shipping_information.postal_code === "string") postal = sess.shipping_information.postal_code;
+      if (typeof sess.shipping_information.country === "string") country = sess.shipping_information.country;
     }
 
     let shipping_out = {
       options: options_out,
-      name: {
-        full_name: fullname_val
-      },
+      name: { full_name: fullname_val },
       email_address: email_val,
-      phone_number: {
-        country_code: country_code_val,
-        national_number: national_number_val
-      },
+      phone_number: { country_code: country_code_val, national_number: national_number_val },
       address: {
         address_line_1: addr1,
         address_line_2: addr2,
@@ -307,11 +276,9 @@ function set_session_purchase_unit_shipping_from_top_level(pu_index) {
     }
     pu.shipping = merged;
 
-    if (typeof window.website_session.id === "string") {
-      if (window.website_session.id.length > 0) {
-        if (typeof pu.reference_id !== "string" || pu.reference_id.length === 0) {
-          pu.reference_id = window.website_session.id;
-        }
+    if (typeof window.website_session.id === "string" && window.website_session.id.length > 0) {
+      if (typeof pu.reference_id !== "string" || pu.reference_id.length === 0) {
+        pu.reference_id = window.website_session.id;
       }
     }
 
@@ -325,8 +292,9 @@ function set_session_purchase_unit_shipping_from_top_level(pu_index) {
     units[index_value] = pu;
 
     set_session_basket({ purchase_units: units }).then(function () {
-      set_session_purchase_unit_amount_breakdown(typeof pu_index === "number" ? pu_index : 0);
-      resolve(pu.shipping);
+      set_session_purchase_unit_amount_breakdown(typeof pu_index === "number" ? pu_index : 0).then(function () {
+        resolve(pu.shipping);
+      });
     });
   });
 }

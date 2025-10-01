@@ -42,9 +42,9 @@ function make_default_products() {
 
 function make_default_shipping_options() {
   let default_shipping_options_array = [
-    { name: "Free Shipping", price: "0.00" },
-    { name: "Standard Shipping", price: "7.00" },
-    { name: "Express Shipping", price: "15.00" }
+    { id: "free", name: "Free Shipping", price: "0.00" },
+    { id: "standard", name: "Standard Shipping", price: "7.00" },
+    { id: "express", name: "Express Shipping", price: "15.00" }
   ];
   return default_shipping_options_array;
 }
