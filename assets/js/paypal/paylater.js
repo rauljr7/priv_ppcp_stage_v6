@@ -12,6 +12,8 @@ async function initPayLater() {
         if (paymentMethods.isEligible("paylater")) {
         const paylaterPaymentMethodDetails = paymentMethods.getDetails("paylater");
         setupPayLaterButton(sdkInstance, paylaterPaymentMethodDetails);
+        } else {
+            window.remove_loading?.({ id: "paypal-pay-later-button" });
         }
     }
 }
