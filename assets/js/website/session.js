@@ -734,6 +734,79 @@ function get_session_transaction_payload() {
   }
 }
 
+// --- Amount helpers/getters ---
+
+function resolve_session_currency_code() {
+  const units = get_session_basket_purchase_units();
+  // Prefer PU.amount.currency_code
+  for (let i = 0; i < units.length; i++) {
+    const pu = units[i];
+    if (pu && pu.amount && typeof pu.amount.currency_code === "string" && pu.amount.currency_code) {
+      return pu.amount.currency_code;
+    }
+  }
+  // Fallback to first item's unit_amount.currency_code
+  for (let i = 0; i < units.length; i++) {
+    const pu = units[i];
+    if (pu && Array.isArray(pu.items)) {
+      for (let j = 0; j < pu.items.length; j++) {
+        const it = pu.items[j];
+        if (it && it.unit_amount && typeof it.unit_amount.currency_code === "string" && it.unit_amount.currency_code) {
+          return it.unit_amount.currency_code;
+        }
+      }
+    }
+  }
+  return "USD";
+}
+
+function compute_session_items_total() {
+  const units = get_session_basket_purchase_units();
+  let total = 0;
+  for (let i = 0; i < units.length; i++) {
+    total += compute_purchase_unit_items_total(units[i]);
+  }
+  return Number(total.toFixed(2));
+}
+
+function compute_session_shipping_total() {
+  const opt = get_session_selected_shipping_option();
+  if (!opt) return 0;
+
+  let v = 0;
+  if (opt.amount && typeof opt.amount.value === "string") {
+    const n = parseFloat(opt.amount.value);
+    v = isNaN(n) ? 0 : n;
+  } else if (typeof opt.price === "string") {
+    const n2 = parseFloat(opt.price);
+    v = isNaN(n2) ? 0 : n2;
+  }
+  return Number(v.toFixed(2));
+}
+
+/** Subtotal (items only, all PUs, qty observed) as a fixed-2 string */
+function get_session_subtotal_value() {
+  const subtotalNum = compute_session_items_total();
+  return subtotalNum.toFixed(2);
+}
+
+/** Total (subtotal + selected shipping if any) as a fixed-2 string */
+function get_session_total_value() {
+  const subtotalNum = compute_session_items_total();
+  const shippingNum = compute_session_shipping_total();
+  const totalNum = subtotalNum + shippingNum;
+  return totalNum.toFixed(2);
+}
+
+/** Convenience aggregate */
+function get_session_amounts() {
+  const currency_code = resolve_session_currency_code();
+  const subtotal = get_session_subtotal_value();
+  const shipping = compute_session_shipping_total().toFixed(2);
+  const total = get_session_total_value();
+  return { currency_code, subtotal, shipping, total };
+}
+
 /* setters (Promise-based, with persistence) */
 
 function set_website_session(patch) {
@@ -986,6 +1059,9 @@ window.set_session_shipping_methods = set_session_shipping_methods;
 window.set_session_transaction_payload = set_session_transaction_payload;
 window.set_session_purchase_unit_shipping_from_top_level = set_session_purchase_unit_shipping_from_top_level;
 window.clear_session = clear_session;
+window.get_session_subtotal_value = get_session_subtotal_value;
+window.get_session_total_value = get_session_total_value;
+window.get_session_amounts = get_session_amounts;
 document.addEventListener("DOMContentLoaded", function () {
   try {
     const stored = load_session_from_storage();

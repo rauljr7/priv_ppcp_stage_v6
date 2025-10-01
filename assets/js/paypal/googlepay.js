@@ -138,7 +138,7 @@ async function onGooglePayButtonClick(
 
 async function setupGooglePayButton(sdkInstance) {
   const googlePaySession = sdkInstance.createGooglePayOneTimePaymentSession();
-  const purchaseAmount = "10.00";
+  const purchaseAmount = get_session_total_value();
 
   try {
     const paymentsClient = new google.payments.api.PaymentsClient({
