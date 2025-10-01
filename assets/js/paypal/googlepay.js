@@ -63,6 +63,7 @@ async function getGooglePaymentDataRequest(purchaseAmount, googlePayConfig) {
   if (get_session_selected_shipping_id() !== "") {
     paymentDataRequest.shippingOptionParameters.defaultSelectedOptionId = get_session_selected_shipping_id();
   }
+  console.log(paymentDataRequest);
 
   paymentDataRequest.transactionInfo = getGoogleTransactionInfo(
     purchaseAmount,
