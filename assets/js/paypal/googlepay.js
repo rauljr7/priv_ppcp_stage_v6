@@ -54,7 +54,7 @@ async function getGooglePaymentDataRequest(purchaseAmount, googlePayConfig) {
   );
 
   paymentDataRequest.merchantInfo = merchantInfo;
-  paymentDataRequest.callbackIntents = ["PAYMENT_AUTHORIZATION"];
+  paymentDataRequest.callbackIntents = ["PAYMENT_AUTHORIZATION", "SHIPPING_OPTION", "SHIPPING_ADDRESS"];
 
   return paymentDataRequest;
 }
@@ -106,6 +106,10 @@ async function onGooglePayButtonClick(
   }
 }
 
+function onPaymentDataChanged(payload) {
+  console.log(payload);
+}
+
 async function setupGooglePayButton(sdkInstance) {
   const googlePaySession = sdkInstance.createGooglePayOneTimePaymentSession();
   const purchaseAmount = get_session_total_value();
@@ -114,8 +118,10 @@ async function setupGooglePayButton(sdkInstance) {
     const paymentsClient = new google.payments.api.PaymentsClient({
       environment: "TEST", // Change to "PRODUCTION" for live transactions
       paymentDataCallbacks: {
-        onPaymentAuthorized: (paymentData) =>
-          onPaymentAuthorized(purchaseAmount, paymentData, googlePaySession),
+        onPaymentAuthorized: (paymentData) => {
+          return onPaymentAuthorized(purchaseAmount, paymentData, googlePaySession);
+        },
+        onPaymentDataChanged: onPaymentDataChanged()
       },
     });
 
