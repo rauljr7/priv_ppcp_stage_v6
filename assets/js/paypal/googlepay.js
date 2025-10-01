@@ -6,35 +6,6 @@ async function initGooglePay() {
   }
 }
 
-function getPayPalOrderPayload(purchaseAmount) {
-  return {
-    intent: "CAPTURE",
-    purchaseUnits: [
-      {
-        amount: {
-          currencyCode: "USD",
-          value: purchaseAmount,
-          breakdown: {
-            itemTotal: {
-              currencyCode: "USD",
-              value: purchaseAmount,
-            },
-          },
-        },
-      },
-    ],
-    paymentSource: {
-      googlePay: {
-        attributes: {
-          verification: {
-            method: "SCA_WHEN_REQUIRED",
-          },
-        },
-      },
-    },
-  };
-}
-
 function getGoogleTransactionInfo(purchaseAmount, countryCode) {
   const totalAmount = parseFloat(purchaseAmount);
   const subtotal = (totalAmount * 0.9).toFixed(2);
@@ -95,10 +66,9 @@ async function onPaymentAuthorized(
 ) {
   try {
     const orderPayload = createOrder();
-    const id = await createOrder(orderPayload);
 
     const { status } = await googlePaySession.confirmOrder({
-      orderId: id,
+      orderId: orderPayload.orderId,
       paymentMethodData: paymentData.paymentMethodData,
     });
 
