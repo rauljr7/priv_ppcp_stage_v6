@@ -54,7 +54,7 @@ async function getGooglePaymentDataRequest(purchaseAmount, googlePayConfig) {
   );
 
   paymentDataRequest.merchantInfo = merchantInfo;
-  paymentDataRequest.callbackIntents = ["PAYMENT_AUTHORIZATION", "SHIPPING_OPTION", "SHIPPING_ADDRESS"];
+  paymentDataRequest.callbackIntents = ["PAYMENT_AUTHORIZATION"];
 
   return paymentDataRequest;
 }
