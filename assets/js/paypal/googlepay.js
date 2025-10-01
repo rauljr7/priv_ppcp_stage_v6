@@ -121,7 +121,7 @@ async function setupGooglePayButton(sdkInstance) {
         onPaymentAuthorized: (paymentData) => {
           return onPaymentAuthorized(purchaseAmount, paymentData, googlePaySession);
         },
-        onPaymentDataChanged: onPaymentDataChanged()
+        onPaymentDataChanged: onPaymentDataChanged
       },
     });
 
