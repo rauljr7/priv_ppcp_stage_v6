@@ -14,20 +14,20 @@ function getGoogleTransactionInfo(purchaseAmount, countryCode) {
   return {
     displayItems: [
       {
-        label: "Subtotal",
+        label: "Widget",
         type: "SUBTOTAL",
-        price: subtotal,
+        price: get_session_subtotal_value(),
       },
-      {
+      /* {
         label: "Tax",
         type: "TAX",
         price: tax,
-      },
+      }, */
     ],
     countryCode: countryCode,
     currencyCode: "USD",
     totalPriceStatus: "FINAL",
-    totalPrice: purchaseAmount,
+    totalPrice: get_session_total_value(),
     totalPriceLabel: "Total",
   };
 }
@@ -54,7 +54,7 @@ async function getGooglePaymentDataRequest(purchaseAmount, googlePayConfig) {
   );
 
   paymentDataRequest.merchantInfo = merchantInfo;
-  paymentDataRequest.callbackIntents = ["PAYMENT_AUTHORIZATION"];
+  paymentDataRequest.callbackIntents = ["PAYMENT_AUTHORIZATION", "SHIPPING_OPTION", "SHIPPING_ADDRESS"];
 
   return paymentDataRequest;
 }
