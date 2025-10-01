@@ -48,13 +48,29 @@ async function getGooglePaymentDataRequest(purchaseAmount, googlePayConfig) {
   const paymentDataRequest = Object.assign({}, baseRequest);
 
   paymentDataRequest.allowedPaymentMethods = allowedPaymentMethods;
+  paymentDataRequest.shippingOptionRequired  = true;
+  paymentDataRequest.shippingAddressRequired = true;
+  paymentDataRequest.shippingAddressParameters = {
+        allowedCountryCodes: ['US'],
+        phoneNumberRequired: true
+    };
+  paymentDataRequest.shippingOptionParameters = {
+    shippingOptions: window.website_shipping_options.map((o,i)=>(
+      { id:`${String(i+1).padStart(3,"0")}`,
+      label:`$${(parseFloat(o.price)||0).toFixed(2)}`
+    }))
+  };
+  if (get_session_selected_shipping_id() !== "") {
+    paymentDataRequest.shippingOptionParameters.defaultSelectedOptionId = get_session_selected_shipping_id();
+  }
+
   paymentDataRequest.transactionInfo = getGoogleTransactionInfo(
     purchaseAmount,
     countryCode,
   );
 
   paymentDataRequest.merchantInfo = merchantInfo;
-  paymentDataRequest.callbackIntents = ["PAYMENT_AUTHORIZATION"];
+  paymentDataRequest.callbackIntents = ["PAYMENT_AUTHORIZATION", "SHIPPING_OPTION", "SHIPPING_ADDRESS"];
 
   return paymentDataRequest;
 }
@@ -64,7 +80,6 @@ async function onPaymentAuthorized(
   paymentData,
   googlePaySession,
 ) {
-  console.log("hurr");
   try {
     const orderPayload = createOrder();
 
@@ -107,8 +122,54 @@ async function onGooglePayButtonClick(
   }
 }
 
-function onPaymentDataChanged(payload) {
-  console.log(payload);
+async function onPaymentDataChanged(payment_data) {
+  let response_update = {};
+
+  if (payment_data.callbackTrigger === 'SHIPPING_OPTION') {
+      let selected_option_id = payment_data.shippingOptionData.id;
+      let available_options = gpay_payment_data_request.shippingOptionParameters.shippingOptions;
+      let selected_option = available_options.find(option => option.id === selected_option_id);
+      let shipping_cost = parseFloat(selected_option.label.replace(/[^0-9.]/g, ''));
+      let basket_subtotal = parseFloat(get_basket_item_total());
+      let combined_total = (basket_subtotal + shipping_cost).toFixed(2);
+      let base_transaction_info = build_google_transaction_info(
+          gpay_payment_data_request.transactionInfo.countryCode
+      );
+      base_transaction_info.totalPrice = combined_total;
+      base_transaction_info.totalPriceStatus = 'FINAL';
+      response_update.newTransactionInfo = base_transaction_info;
+      response_update.newShippingOptionParameters = {
+          defaultSelectedOptionId: selected_option_id,
+          shippingOptions: available_options
+      };
+  }
+
+  if (payment_data.callbackTrigger === 'SHIPPING_ADDRESS') {
+      let country_code = payment_data.shippingAddress.countryCode;
+      if (country_code !== 'US') {
+          response_update.error = {
+              reason: 'SHIPPING_ADDRESS_UNSERVICEABLE',
+              message: 'Sorry, we only ship within the U.S.',
+              intent: 'SHIPPING_ADDRESS'
+          };
+      } else {
+          let shipping_array = await fetch_shipping_options();
+          let remapped_parameters = remap_shipping_for_gpay(shipping_array);
+          response_update.newShippingOptionParameters = remapped_parameters;
+          let default_option_id = remapped_parameters.defaultSelectedOptionId;
+          let default_option = remapped_parameters.shippingOptions.find(option => option.id === default_option_id);
+          let shipping_cost = parseFloat(default_option.label.replace(/[^0-9.]/g, ''));
+          let basket_subtotal = parseFloat(get_basket_item_total());
+          let combined_total = (basket_subtotal + shipping_cost).toFixed(2);
+          let base_transaction_info = build_google_transaction_info(
+              gpay_payment_data_request.transactionInfo.countryCode
+          );
+          base_transaction_info.totalPrice = combined_total;
+          base_transaction_info.totalPriceStatus = 'FINAL';
+          response_update.newTransactionInfo = base_transaction_info;
+      }
+  }
+  return response_update;
 }
 
 async function setupGooglePayButton(sdkInstance) {
@@ -122,6 +183,7 @@ async function setupGooglePayButton(sdkInstance) {
         onPaymentAuthorized: (paymentData) => {
           return onPaymentAuthorized(purchaseAmount, paymentData, googlePaySession);
         },
+        onPaymentDataChanged: onPaymentDataChanged()
       },
     });
 

@@ -158,3 +158,4 @@ function get_website_shipping_options() {
     return [];
   }
 }
+set_website_shipping_options();
