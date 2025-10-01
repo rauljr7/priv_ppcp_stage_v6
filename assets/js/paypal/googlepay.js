@@ -94,7 +94,7 @@ async function onPaymentAuthorized(
   googlePaySession,
 ) {
   try {
-    const orderPayload = getPayPalOrderPayload(purchaseAmount);
+    const orderPayload = createOrder();
     const id = await createOrder(orderPayload);
 
     const { status } = await googlePaySession.confirmOrder({
