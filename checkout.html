@@ -11,9 +11,12 @@
   <link rel="stylesheet" href="assets/css/checkout.css">
   <script src="assets/js/website/loading.js"></script>
   <style>
-    paypal-button, venmo-button, paypal-pay-later-button {
+    paypal-button, venmo-button, paypal-pay-later-button, #googlepay-button-container {
       width: 100%;
 	    margin-top: 10px;
+    }
+    #googlepay-button-container > :first-child > * {
+      width: 100%;
     }
   </style>
 </head>
@@ -174,7 +177,7 @@
                   <paypal-button class="paypal-gold" data-express aria-label="PayPal"></paypal-button>
                   <venmo-button aria-label="Venmo"></venmo-button>
                   <paypal-pay-later-button aria-label="PayLater"></paypal-pay-later-button>
-                  <button type="button" id="wallet_gpay_btn" data-express aria-label="Google Pay">Google&nbsp;Pay</button>
+                  <div id="googlepay-button-container"></div>
                   <button type="button" id="wallet_applepay_btn" data-express aria-label="Apple Pay">Apple&nbsp;Pay</button>
                 </div>
 
@@ -244,6 +247,8 @@
   <script src="assets/js/paypal/messages.js" defer></script>
   <script src="assets/js/paypal/venmo.js" defer></script>
   <script src="assets/js/paypal/paylater.js" defer></script>
+  <script src="https://pay.google.com/gp/p/js/pay.js" defer></script>
+  <script src="assets/js/paypal/googlepay.js" defer></script>
   <script src="assets/js/paypal/utils.js" defer></script>
   <script src="https://www.sandbox.paypal.com/web-sdk/v6/core" onload="onPayPalWebSdkLoaded()" defer></script>
 </body>
