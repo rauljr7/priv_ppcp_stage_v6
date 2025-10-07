@@ -56,52 +56,70 @@ function renderItemsFromSession() {
 
 /* ========= Blocks ========= */
 function fillAddresses(tx) {
-  const billingName = tx?.payer?.name ? [tx.payer.name.given_name, tx.payer.name.surname].filter(Boolean).join(" ") : "";
-  const billingAddr = tx?.payer?.address || null;
+  let gp = tx && tx.payment_source && tx.payment_source.google_pay ? tx.payment_source.google_pay : null;
+  let gp_card = gp && gp.card ? gp.card : null;
 
-  set("billing_name", billingName || "—");
-  set("billing_line1", billingAddr?.address_line_1 || "—");
-  set("billing_city_state_postal", joinCityStatePostal(billingAddr) || "—");
-  set("billing_country", billingAddr?.country_code || "—");
+  let billing_name = "";
+  if (tx && tx.payer && tx.payer.name) {
+    billing_name = [tx.payer.name.given_name, tx.payer.name.surname].filter(Boolean).join(" ");
+  } else if (gp && typeof gp.name === "string") {
+    billing_name = gp.name;
+  } else if (gp_card && typeof gp_card.name === "string") {
+    billing_name = gp_card.name;
+  }
 
-  const hasBilling = hasAny([
-    billingName,
-    billingAddr?.address_line_1,
-    joinCityStatePostal(billingAddr),
-    billingAddr?.country_code
+  let billing_addr = null;
+  if (tx && tx.payer && tx.payer.address) {
+    billing_addr = tx.payer.address;
+  } else if (gp_card && gp_card.billing_address) {
+    billing_addr = gp_card.billing_address;
+  }
+
+  set("billing_name", billing_name || "—");
+  set("billing_line1", billing_addr && billing_addr.address_line_1 ? billing_addr.address_line_1 : "—");
+  set("billing_city_state_postal", joinCityStatePostal(billing_addr) || "—");
+  set("billing_country", billing_addr && billing_addr.country_code ? billing_addr.country_code : "—");
+
+  let has_billing = hasAny([
+    billing_name,
+    billing_addr && billing_addr.address_line_1,
+    joinCityStatePostal(billing_addr),
+    billing_addr && billing_addr.country_code
   ]);
-  showById("section_billing", hasBilling);
+  showById("section_billing", has_billing);
 
-  const pu0 = Array.isArray(tx?.purchase_units) ? tx.purchase_units[0] : null;
-  const ship = pu0?.shipping || null;
-  const shipName = ship?.name?.full_name || "";
-  const shipAddr = ship?.address || null;
+  let pu0 = Array.isArray(tx && tx.purchase_units) ? tx.purchase_units[0] : null;
+  let ship = pu0 && pu0.shipping ? pu0.shipping : null;
+  let ship_name = ship && ship.name && ship.name.full_name ? ship.name.full_name : "";
+  let ship_addr = ship && ship.address ? ship.address : null;
 
-  set("shipping_name", shipName || "—");
-  set("shipping_line1", shipAddr?.address_line_1 || "—");
-  set("shipping_city_state_postal", joinCityStatePostal(shipAddr) || "—");
-  set("shipping_country", shipAddr?.country_code || "—");
+  set("shipping_name", ship_name || "—");
+  set("shipping_line1", ship_addr && ship_addr.address_line_1 ? ship_addr.address_line_1 : "—");
+  set("shipping_city_state_postal", joinCityStatePostal(ship_addr) || "—");
+  set("shipping_country", ship_addr && ship_addr.country_code ? ship_addr.country_code : "—");
 
   let method = "—";
-  if (Array.isArray(ship?.options)) {
-    const chosen = ship.options.find(o => o?.selected) || ship.options[0];
-    if (chosen) method = chosen.label || chosen.id || "—";
+  if (ship && Array.isArray(ship.options)) {
+    let chosen = ship.options.find(function (o) { return o && o.selected; }) || ship.options[0];
+    if (chosen) {
+      method = chosen.label || chosen.id || "—";
+    }
   }
   set("shipping_method", method);
 
-  const hasShipping = hasAny([
-    shipName,
-    shipAddr?.address_line_1,
-    joinCityStatePostal(shipAddr),
-    shipAddr?.country_code,
+  let has_shipping = hasAny([
+    ship_name,
+    ship_addr && ship_addr.address_line_1,
+    joinCityStatePostal(ship_addr),
+    ship_addr && ship_addr.country_code,
     method && method !== "—"
   ]);
-  showById("section_shipping", hasShipping);
+  showById("section_shipping", has_shipping);
 
-  const addrGrid = document.querySelector("#section_address_grid .info-grid");
-  toggleTwoCol(addrGrid, hasBilling && hasShipping);
+  let addr_grid = document.querySelector("#section_address_grid .info-grid");
+  toggleTwoCol(addr_grid, has_billing && has_shipping);
 
-  return { hasBilling, hasShipping };
+  return { hasBilling: has_billing, hasShipping: has_shipping };
 }
 
 function fillBuyer(tx) {
@@ -119,21 +137,49 @@ function fillBuyer(tx) {
 }
 
 function fillPayment(tx) {
-  const ps = tx?.payment_source || {};
-  let hasPayment = false;
+  let ps = tx && tx.payment_source ? tx.payment_source : {};
+  let has_payment = false;
 
   if (ps.paypal) {
     set("pp_email", ps.paypal.email_address || "—");
     set("pp_account_id", ps.paypal.account_id || "—");
     set("pp_account_status", ps.paypal.account_status || "—");
     showById("payment_paypal", true);
-    hasPayment = true;
+    let gp_card_el = document.getElementById("payment_googlepay");
+    if (gp_card_el) gp_card_el.classList.add("hide");
+    has_payment = true;
   } else {
     showById("payment_paypal", false);
   }
 
-  showById("section_payment", hasPayment);
-  return hasPayment;
+  if (ps.google_pay) {
+    let card_el = ensureGooglePayCard();
+    if (card_el) card_el.classList.remove("hide");
+
+    let gp = ps.google_pay;
+    let gc = gp.card || {};
+    let brand = gc.brand || "";
+    let last = gc.last_digits || "";
+    let display = "";
+    if (brand && last) {
+      display = brand + " •••• " + last;
+    } else if (brand) {
+      display = brand;
+    } else if (last) {
+      display = "•••• " + last;
+    } else {
+      display = "—";
+    }
+
+    set("gp_card", display);
+    set("gp_type", gc.type || "—");
+    set("gp_name", gp.name || gc.name || "—");
+
+    has_payment = true;
+  }
+
+  showById("section_payment", has_payment);
+  return has_payment;
 }
 
 function fillOrderMeta(tx) {
@@ -166,6 +212,30 @@ function fillTotalsFromSession() {
   set("shipping_total_value", fmtMoney(ship));
   set("order_total_value", fmtMoney(total));
 }
+
+function ensureGooglePayCard() {
+  let host = document.getElementById("section_payment");
+  if (!host) return null;
+
+  let card = document.getElementById("payment_googlepay");
+  if (card) return card;
+
+  card = document.createElement("div");
+  card.id = "payment_googlepay";
+  card.className = "pay-card";
+  card.innerHTML =
+    '<div class="pay-row">' +
+      '<div class="pay-brand"><span class="pill">Google&nbsp;Pay</span></div>' +
+      '<div class="pay-meta">' +
+        '<div class="kv"><span class="k">Card</span><span id="gp_card" class="v">—</span></div>' +
+        '<div class="kv"><span class="k">Type</span><span id="gp_type" class="v">—</span></div>' +
+        '<div class="kv"><span class="k">Name</span><span id="gp_name" class="v">—</span></div>' +
+      '</div>' +
+    '</div>';
+  host.appendChild(card);
+  return card;
+}
+
 
 /* ========= Public API ========= */
 window.receipt = {
