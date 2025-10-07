@@ -122,6 +122,7 @@ async function onGooglePayButtonClick(
 
 async function onPaymentDataChanged(payment_data) {
   let response_update = {};
+  console.log(payment_data);
 
   if (payment_data.callbackTrigger === 'SHIPPING_OPTION') {
       let selected_option_id = payment_data.shippingOptionData.id;
