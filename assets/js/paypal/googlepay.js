@@ -127,6 +127,7 @@ async function onGooglePayButtonClick(
 }
 
 async function onPaymentDataChanged(payment_data) {
+      console.log("payment_data:", payment_data);
   let response_update = {};
 
   let state = "";
