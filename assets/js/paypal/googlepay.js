@@ -79,7 +79,7 @@ async function onPaymentAuthorized(
   googlePaySession,
 ) {
   try {
-    const orderPayload = await createOrder();
+    const orderPayload = await createOrder("google-pay");
 
     console.log(orderPayload);
 
