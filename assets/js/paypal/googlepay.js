@@ -80,12 +80,14 @@ async function onPaymentAuthorized(
 ) {
   try {
     const orderPayload = createOrder();
+    console.log("orderPayload");
     console.log(orderPayload);
 
     const { status } = await googlePaySession.confirmOrder({
       orderId: orderPayload.orderId,
       paymentMethodData: paymentData.paymentMethodData,
     });
+    console.log("status");
     console.log(status);
 
     if (status !== "PAYER_ACTION_REQUIRED") {
