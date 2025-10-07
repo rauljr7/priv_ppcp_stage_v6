@@ -128,18 +128,25 @@ async function onGooglePayButtonClick(
 
 async function onPaymentDataChanged(payment_data) {
   let response_update = {};
-  let trigger = "";
-  if (payment_data && typeof payment_data.callbackTrigger === "string") {
-    trigger = payment_data.callbackTrigger;
-  }
-  console.log(payment_data);
 
-  if (trigger === "SHIPPING_OPTION") {
-    response_update = await handle_google_pay_shipping_options_change(payment_data);
-  } else if (trigger === "SHIPPING_ADDRESS") {
-    response_update = await handle_google_pay_shipping_address_change(payment_data);
+  let state = "";
+  if (payment_data && payment_data.shippingAddress && typeof payment_data.shippingAddress.administrativeArea === "string") {
+    state = payment_data.shippingAddress.administrativeArea;
   }
-  // Google Pay's payload to be remapped to PayPal's for the session
+
+  if (state === "AZ") {
+    // This is just to demonstrate a "Custom" shipping rule. You can make
+    // Any rule here, this is just a simple example of how to display dynamic changes
+    // You don't need this if statement, this is just to demo
+    response_update = await handle_custom_payment_data_change_rules(payment_data);
+  } else {
+    if (payment_data && payment_data.callbackTrigger === "SHIPPING_OPTION") {
+      response_update = await handle_google_pay_shipping_options_change(payment_data);
+    } else if (payment_data && payment_data.callbackTrigger === "SHIPPING_ADDRESS") {
+      response_update = await handle_google_pay_shipping_address_change(payment_data);
+    }
+  }
+
   await remap_google_payload_to_session(payment_data);
   return response_update;
 }
@@ -191,6 +198,162 @@ async function setupGooglePayButton(sdkInstance) {
 }
 
 // Helper functions
+
+async function handle_custom_payment_data_change_rules(payment_data) {
+  let response_update = {};
+  let trigger = "";
+  if (payment_data && typeof payment_data.callbackTrigger === "string") {
+    trigger = payment_data.callbackTrigger;
+  }
+
+  let is_az = false;
+  if (payment_data && payment_data.shippingAddress && typeof payment_data.shippingAddress.administrativeArea === "string") {
+    if (payment_data.shippingAddress.administrativeArea === "AZ") {
+      is_az = true;
+    }
+  }
+
+  let src = [];
+  if (Array.isArray(window.website_shipping_options) === true) {
+    for (let i = 0; i < window.website_shipping_options.length; i = i + 1) {
+      let o = window.website_shipping_options[i] || {};
+      let copy = { id: o.id, name: o.name, price: o.price };
+      if (o.amount && typeof o.amount === "object") {
+        copy.amount = { currency_code: o.amount.currency_code, value: o.amount.value };
+      }
+      src.push(copy);
+    }
+  }
+
+  if (is_az) {
+    for (let i = 0; i < src.length; i = i + 1) {
+      let o = src[i] || {};
+      let id = typeof o.id === "string" ? o.id : "";
+      let name_l = typeof o.name === "string" ? o.name.toLowerCase() : "";
+      if (id === "free" || name_l.indexOf("free") > -1) {
+        o.id = "custom-free-express";
+        o.name = "Same State as Business Discount - Free Express Shipping";
+        if (typeof o.price === "string") {
+          o.price = "0.00";
+        }
+        if (o.amount && typeof o.amount === "object") {
+          o.amount.value = "0.00";
+        }
+      }
+      src[i] = o;
+    }
+  }
+
+  let shipping_options = [];
+  for (let i = 0; i < src.length; i = i + 1) {
+    let o = src[i] || {};
+    let id_val = "";
+    if (typeof o.id === "string" && o.id.length > 0) {
+      id_val = o.id;
+    } else {
+      id_val = String(i + 1).padStart(3, "0");
+    }
+    let label_val = "";
+    if (typeof o.name === "string" && o.name.length > 0) {
+      label_val = o.name;
+    } else {
+      label_val = "Option " + (i + 1);
+    }
+    shipping_options.push({ id: id_val, label: label_val });
+  }
+
+  if (trigger === "SHIPPING_OPTION") {
+    let selected_id = "";
+    if (payment_data.shippingOptionData && typeof payment_data.shippingOptionData.id === "string") {
+      selected_id = payment_data.shippingOptionData.id;
+    }
+    if (is_az) {
+      if (selected_id === "free") {
+        selected_id = "custom-free-express";
+      }
+    }
+    if (selected_id) {
+      await set_session_selected_shipping(selected_id);
+    }
+
+    let pu_list = get_session_basket_purchase_units();
+    let pu0 = Array.isArray(pu_list) && pu_list.length ? pu_list[0] : {};
+    let total_price = "0.00";
+    let currency_code = "USD";
+    if (pu0 && pu0.amount && typeof pu0.amount.value === "string") {
+      total_price = pu0.amount.value;
+    }
+    if (pu0 && pu0.amount && typeof pu0.amount.currency_code === "string") {
+      currency_code = pu0.amount.currency_code;
+    }
+
+    response_update.newTransactionInfo = {
+      totalPrice: String(total_price),
+      totalPriceStatus: "FINAL",
+      currencyCode: currency_code
+    };
+    response_update.newShippingOptionParameters = {
+      defaultSelectedOptionId: selected_id,
+      shippingOptions: shipping_options
+    };
+    return response_update;
+  } else if (trigger === "SHIPPING_ADDRESS") {
+    let country_code = "";
+    if (payment_data.shippingAddress && typeof payment_data.shippingAddress.countryCode === "string") {
+      country_code = payment_data.shippingAddress.countryCode;
+    }
+
+    if (country_code !== "US") {
+      response_update.error = {
+        reason: "SHIPPING_ADDRESS_UNSERVICEABLE",
+        message: "Sorry, we only ship within the U.S.",
+        intent: "SHIPPING_ADDRESS"
+      };
+      return response_update;
+    }
+
+    let default_id = "";
+    if (typeof get_session_selected_shipping_id === "function") {
+      default_id = get_session_selected_shipping_id();
+    }
+    if (is_az) {
+      if (!default_id || default_id === "free") {
+        default_id = "custom-free-express";
+      }
+    }
+    if (!default_id && shipping_options.length > 0) {
+      default_id = shipping_options[0].id;
+    }
+
+    if (default_id) {
+      await set_session_selected_shipping(default_id);
+    }
+
+    let pu_list = get_session_basket_purchase_units();
+    let pu0 = Array.isArray(pu_list) && pu_list.length ? pu_list[0] : {};
+    let total_price = "0.00";
+    let currency_code = "USD";
+    if (pu0 && pu0.amount && typeof pu0.amount.value === "string") {
+      total_price = pu0.amount.value;
+    }
+    if (pu0 && pu0.amount && typeof pu0.amount.currency_code === "string") {
+      currency_code = pu0.amount.currency_code;
+    }
+
+    response_update.newShippingOptionParameters = {
+      defaultSelectedOptionId: default_id,
+      shippingOptions: shipping_options
+    };
+    response_update.newTransactionInfo = {
+      totalPrice: String(total_price),
+      totalPriceStatus: "FINAL",
+      currencyCode: currency_code
+    };
+    return response_update;
+  }
+
+  return response_update;
+}
 
 function remap_google_payload_to_session(payment_data) {
   return new Promise(function (resolve) {
