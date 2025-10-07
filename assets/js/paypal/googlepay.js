@@ -132,6 +132,7 @@ async function onPaymentDataChanged(payment_data) {
   if (payment_data && typeof payment_data.callbackTrigger === "string") {
     trigger = payment_data.callbackTrigger;
   }
+  console.log(payment_data);
 
   if (trigger === "SHIPPING_OPTION") {
     response_update = await handle_google_pay_shipping_options_change(payment_data);
