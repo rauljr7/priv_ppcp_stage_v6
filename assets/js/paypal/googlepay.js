@@ -122,25 +122,59 @@ async function onGooglePayButtonClick(
 
 async function onPaymentDataChanged(payment_data) {
   let response_update = {};
-  console.log(payment_data);
 
-  if (payment_data.callbackTrigger === 'SHIPPING_OPTION') {
-      let selected_option_id = payment_data.shippingOptionData.id;
-      let available_options = gpay_payment_data_request.shippingOptionParameters.shippingOptions;
-      let selected_option = available_options.find(option => option.id === selected_option_id);
-      let shipping_cost = parseFloat(selected_option.label.replace(/[^0-9.]/g, ''));
-      let basket_subtotal = parseFloat(get_basket_item_total());
-      let combined_total = (basket_subtotal + shipping_cost).toFixed(2);
-      let base_transaction_info = build_google_transaction_info(
-          gpay_payment_data_request.transactionInfo.countryCode
-      );
-      base_transaction_info.totalPrice = combined_total;
-      base_transaction_info.totalPriceStatus = 'FINAL';
-      response_update.newTransactionInfo = base_transaction_info;
-      response_update.newShippingOptionParameters = {
-          defaultSelectedOptionId: selected_option_id,
-          shippingOptions: available_options
+  if (payment_data && payment_data.callbackTrigger === "SHIPPING_OPTION") {
+    let selected_id = "";
+    if (payment_data.shippingOptionData && typeof payment_data.shippingOptionData.id === "string") {
+      selected_id = payment_data.shippingOptionData.id;
+    }
+
+    if (selected_id) {
+      await set_session_selected_shipping(selected_id);
+
+      let pu_list = get_session_basket_purchase_units();
+      let pu0 = Array.isArray(pu_list) && pu_list.length ? pu_list[0] : {};
+      let total_price = "0.00";
+      let currency_code = "USD";
+
+      if (pu0 && pu0.amount && typeof pu0.amount.value === "string") {
+        total_price = pu0.amount.value;
+      }
+      if (pu0 && pu0.amount && typeof pu0.amount.currency_code === "string") {
+        currency_code = pu0.amount.currency_code;
+      }
+
+      let shipping_options = [];
+      if (Array.isArray(window.website_shipping_options) === true) {
+        for (let i = 0; i < window.website_shipping_options.length; i = i + 1) {
+          let o = window.website_shipping_options[i] || {};
+          let id_val = "";
+          if (typeof o.id === "string" && o.id.length > 0) {
+            id_val = o.id;
+          } else {
+            id_val = String(i + 1).padStart(3, "0");
+          }
+          let label_val = "";
+          if (typeof o.name === "string" && o.name.length > 0) {
+            label_val = o.name;
+          } else {
+            label_val = "Option " + (i + 1);
+          }
+          shipping_options.push({ id: id_val, label: label_val });
+        }
+      }
+
+      response_update.newTransactionInfo = {
+        totalPrice: String(total_price),
+        totalPriceStatus: "FINAL",
+        currencyCode: currency_code
       };
+
+      response_update.newShippingOptionParameters = {
+        defaultSelectedOptionId: selected_id,
+        shippingOptions: shipping_options
+      };
+    }
   }
 
   if (payment_data.callbackTrigger === 'SHIPPING_ADDRESS') {
@@ -168,6 +202,7 @@ async function onPaymentDataChanged(payment_data) {
           response_update.newTransactionInfo = base_transaction_info;
       }
   }
+
   return response_update;
 }
 
