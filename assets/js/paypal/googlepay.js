@@ -239,12 +239,18 @@ async function setupGooglePayButton(sdkInstance) {
 
     if (isReadyToPay.result) {
       const button = paymentsClient.createButton({
-        onClick: () =>
+        onClick: async () => {
+          if (get_session_basket_purchase_units_items().length < 1) {
+              await update_session_from_ui(current_product_object).then(function () {
+                  update_add_to_cart_cta_based_on_cart();
+              });
+          }
           onGooglePayButtonClick(
             purchaseAmount,
             paymentsClient,
             googlePayConfig,
-          ),
+          );
+        }
       });
 
       document.getElementById("googlepay-button-container").appendChild(button);
