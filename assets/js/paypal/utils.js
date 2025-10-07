@@ -23,13 +23,13 @@ async function getBrowserSafeClientToken() {
    });
 }
 
-function paymentSessionOptions(payment_Type) {
+function paymentSessionOptions(payment_type) {
     let paymentSessionOptions = {
         async onApprove(data) {
             const orderData = await captureOrder({
                 orderId: data.orderId,
             });
-            run_loading({id: payment_Type, message: "Processing Payment..."});
+            run_loading({id: payment_type, message: "Processing Payment..."});
             set_session_transaction_payload(orderData).then(() => {
                 let sid = get_session_id();
                 window.location.assign(`receipt.html?session=${encodeURIComponent(sid)}`);

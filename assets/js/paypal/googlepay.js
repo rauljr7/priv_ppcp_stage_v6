@@ -90,7 +90,7 @@ async function onPaymentAuthorized(
 
     if (status !== "PAYER_ACTION_REQUIRED") {
       const orderData = await captureOrder({ orderId: orderPayload.orderId });
-      run_loading({id: payment_Type, message: "Processing Payment..."});
+      run_loading({id: "google-pay", message: "Processing Payment..."});
       set_session_transaction_payload(orderData).then(() => {
           let sid = get_session_id();
           window.location.assign(`receipt.html?session=${encodeURIComponent(sid)}`);
@@ -100,6 +100,7 @@ async function onPaymentAuthorized(
 
     return { transactionState: "SUCCESS" };
   } catch (err) {
+    window.remove_loading?.({ id: "google-pay" });
     console.error("Payment authorization error:", err);
     return {
       transactionState: "ERROR",
