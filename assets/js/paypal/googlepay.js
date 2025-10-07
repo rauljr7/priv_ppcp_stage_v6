@@ -90,6 +90,11 @@ async function onPaymentAuthorized(
 
     if (status !== "PAYER_ACTION_REQUIRED") {
       const orderData = await captureOrder({ orderId: orderPayload.orderId });
+      run_loading({id: payment_Type, message: "Processing Payment..."});
+      set_session_transaction_payload(orderData).then(() => {
+          let sid = get_session_id();
+          window.location.assign(`receipt.html?session=${encodeURIComponent(sid)}`);
+      });
       console.log(JSON.stringify(orderData, null, 2));
     }
 
