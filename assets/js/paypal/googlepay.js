@@ -141,6 +141,7 @@ async function onPaymentDataChanged(payment_data) {
     response_update = await handle_custom_payment_data_change_rules(payment_data);
   } else {
     if (payment_data && payment_data.callbackTrigger === "SHIPPING_OPTION") {
+      console.log("shipping option change");
       response_update = await handle_google_pay_shipping_options_change(payment_data);
     } else if (payment_data && payment_data.callbackTrigger === "SHIPPING_ADDRESS") {
       console.log("here?");
