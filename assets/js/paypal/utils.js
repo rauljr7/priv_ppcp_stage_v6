@@ -103,7 +103,7 @@ async function onPayPalWebSdkLoaded() {
    if (typeof window.initGooglePay === "function") {
       window.initGooglePay();
    }
-   if (typeof window.onPayPalWebSdkLoaded === "function") {
-      window.onPayPalWebSdkLoaded();
+   if (typeof window.initCards === "function") {
+      window.initCards();
    }
 }

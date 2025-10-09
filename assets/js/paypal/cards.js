@@ -1,4 +1,4 @@
-async function onPayPalWebSdkLoaded() {
+async function initCards() {
   try {
     window.run_loading({id: "card-fields", message: "Loading Card Fields..."});
     let paymentMethodsForCards = await sdkInstance.findEligibleMethods();
