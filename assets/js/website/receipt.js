@@ -144,21 +144,46 @@ function renderItemsFromSession() {
   body.appendChild(row);
 }
 
-function fillTotalsFromSession() {
+function fillTotalsFromSession(tx) {
   let items = 0, ship = 0, total = 0;
 
+  // 1) Try website_session first
   const pu0 = getWebsiteSessionPU0();
   if (pu0 && pu0.amount) {
     items = parseFloat(pu0?.amount?.breakdown?.item_total?.value || "0") || 0;
     ship  = parseFloat(pu0?.amount?.breakdown?.shipping?.value   || "0") || 0;
     total = parseFloat(pu0?.amount?.value || (items + ship)) || (items + ship);
-  } else {
-    const tx = window.receipt_last_tx || window.transaction_payload || null;
-    const xpu0 = Array.isArray(tx && tx.purchase_units) ? tx.purchase_units[0] : null;
+  }
+
+  // 2) If still zero, fall back to tx (prod GPay often lacks purchase_units.amount)
+  if (items === 0 && ship === 0 && total === 0) {
+    const x = tx || window.receipt_last_tx || window.transaction_payload || null;
+    const xpu0 = Array.isArray(x && x.purchase_units) ? x.purchase_units[0] : null;
+
     if (xpu0 && xpu0.amount) {
       items = parseFloat(xpu0?.amount?.breakdown?.item_total?.value || "0") || 0;
       ship  = parseFloat(xpu0?.amount?.breakdown?.shipping?.value   || "0") || 0;
       total = parseFloat(xpu0?.amount?.value || (items + ship)) || (items + ship);
+    } else {
+      // No PU amount in prod -> use capture amount as the total
+      const cap = xpu0 && xpu0.payments && Array.isArray(xpu0.payments.captures) ? xpu0.payments.captures[0] : null;
+      if (cap && cap.amount && typeof cap.amount.value === "string") {
+        total = parseFloat(cap.amount.value) || 0;
+
+        // If a shipping option is present on the order, subtract it from total for an items figure
+        let chosen = null;
+        const opts = xpu0 && xpu0.shipping && Array.isArray(xpu0.shipping.options) ? xpu0.shipping.options : null;
+        if (opts && opts.length) {
+          chosen = opts.find(function (o) { return o && o.selected; }) || opts[0];
+        }
+        if (chosen && chosen.amount && typeof chosen.amount.value === "string") {
+          ship = parseFloat(chosen.amount.value) || 0;
+        } else {
+          ship = 0;
+        }
+        items = total - ship;
+        if (items < 0) items = 0;
+      }
     }
   }
 
@@ -300,7 +325,7 @@ window.receipt = {
     toggleTwoCol(bpGrid, hasBuyer && hasPayment);
 
     renderItemsFromSession();
-    fillTotalsFromSession();
+    fillTotalsFromSession(tx);
   },
   setTotals: function ({ items, shipping, total } = {}) {
     if (typeof items !== "undefined") set("item_total_value", fmtMoney(items));
