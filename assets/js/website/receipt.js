@@ -43,6 +43,8 @@ function fillPayment(tx) {
     showById("payment_paypal", true);
     let gp_card_el = document.getElementById("payment_googlepay");
     if (gp_card_el) gp_card_el.classList.add("hide");
+    let vn_card_el = document.getElementById("payment_venmo");
+    if (vn_card_el) vn_card_el.classList.add("hide");
     has_payment = true;
   } else {
     showById("payment_paypal", false);
@@ -57,21 +59,49 @@ function fillPayment(tx) {
     let brand = gc.brand || "";
     let last = gc.last_digits || "";
     let display = "";
-    if (brand && last) {
-      display = brand + " •••• " + last;
-    } else if (brand) {
-      display = brand;
-    } else if (last) {
-      display = "•••• " + last;
-    } else {
-      display = "—";
-    }
+    if (brand && last) display = brand + " •••• " + last;
+    else if (brand) display = brand;
+    else if (last) display = "•••• " + last;
+    else display = "—";
 
     set("gp_card", display);
     set("gp_type", gc.type || "—");
     set("gp_name", gp.name || gc.name || "—");
 
+    let vn_card_el = document.getElementById("payment_venmo");
+    if (vn_card_el) vn_card_el.classList.add("hide");
+
     has_payment = true;
+  }
+
+  if (ps.venmo) {
+    let vcard = ensureVenmoCard();
+    if (vcard) vcard.classList.remove("hide");
+
+    let v = ps.venmo;
+    let venmo_name = "";
+    if (v && v.name) {
+      let gn = v.name.given_name || "";
+      let sn = v.name.surname || "";
+      venmo_name = [gn, sn].filter(Boolean).join(" ");
+    }
+    if (!venmo_name && tx && tx.payer && tx.payer.name) {
+      venmo_name = [tx.payer.name.given_name, tx.payer.name.surname].filter(Boolean).join(" ");
+    }
+
+    set("vn_email", v.email_address || tx?.payer?.email_address || "—");
+    set("vn_account_id", v.account_id || tx?.payer?.payer_id || "—");
+    set("vn_name", venmo_name || "—");
+    set("vn_phone", (v.phone_number && v.phone_number.national_number) || (tx?.payer?.phone?.phone_number?.national_number) || "—");
+
+    // Hide GPay card if it was previously shown
+    let gp_card_el = document.getElementById("payment_googlepay");
+    if (gp_card_el) gp_card_el.classList.add("hide");
+
+    has_payment = true;
+  } else {
+    let vn_card_el = document.getElementById("payment_venmo");
+    if (vn_card_el) vn_card_el.classList.add("hide");
   }
 
   showById("section_payment", has_payment);
@@ -310,6 +340,29 @@ function ensureGooglePayCard() {
   return card;
 }
 
+function ensureVenmoCard() {
+  let host = document.getElementById("section_payment");
+  if (!host) return null;
+
+  let card = document.getElementById("payment_venmo");
+  if (card) return card;
+
+  card = document.createElement("div");
+  card.id = "payment_venmo";
+  card.className = "pay-card";
+  card.innerHTML =
+    '<div class="pay-row">' +
+      '<div class="pay-brand"><span class="pill">Venmo</span></div>' +
+      '<div class="pay-meta">' +
+        '<div class="kv"><span class="k">Email</span><span id="vn_email" class="v">—</span></div>' +
+        '<div class="kv"><span class="k">Account ID</span><span id="vn_account_id" class="v">—</span></div>' +
+        '<div class="kv"><span class="k">Name</span><span id="vn_name" class="v">—</span></div>' +
+        '<div class="kv"><span class="k">Phone</span><span id="vn_phone" class="v">—</span></div>' +
+      '</div>' +
+    '</div>';
+  host.appendChild(card);
+  return card;
+}
 
 /* ========= Public API ========= */
 window.receipt = {

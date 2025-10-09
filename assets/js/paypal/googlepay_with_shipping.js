@@ -91,7 +91,7 @@ async function onPaymentAuthorized(
       run_loading({id: "google-pay", message: "Processing Payment..."});
       set_session_transaction_payload(orderData).then(() => {
           let sid = get_session_id();
-          //window.location.assign(`receipt.html?session=${encodeURIComponent(sid)}`);
+          window.location.assign(`receipt.html?session=${encodeURIComponent(sid)}`);
       });
       console.log(JSON.stringify(orderData, null, 2));
     }
