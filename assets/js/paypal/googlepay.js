@@ -48,19 +48,6 @@ async function getGooglePaymentDataRequest(purchaseAmount, googlePayConfig) {
   const paymentDataRequest = Object.assign({}, baseRequest);
 
   paymentDataRequest.allowedPaymentMethods = allowedPaymentMethods;
-  paymentDataRequest.shippingOptionRequired  = true;
-  paymentDataRequest.shippingAddressRequired = true;
-  paymentDataRequest.shippingAddressParameters = {
-    allowedCountryCodes: ['US'],
-    phoneNumberRequired: true
-  };
-  // Update shipping options from session (Which should have been obtained from server)
-  paymentDataRequest.shippingOptionParameters = {
-    shippingOptions: window.website_shipping_options.map((o,i)=>({ id:(o.id||String(i+1).padStart(3,"0")), label:(o.name||`Option ${i+1}`) }))
-  };
-  if (get_session_selected_shipping_id() !== "") {
-    paymentDataRequest.shippingOptionParameters.defaultSelectedOptionId = get_session_selected_shipping_id();
-  }
 
   paymentDataRequest.transactionInfo = getGoogleTransactionInfo(
     purchaseAmount,
@@ -109,11 +96,7 @@ async function onPaymentAuthorized(
   }
 }
 
-async function onGooglePayButtonClick(
-  purchaseAmount,
-  paymentsClient,
-  googlePayConfig,
-) {
+async function onGooglePayButtonClick(purchaseAmount, paymentsClient, googlePayConfig) {
   try {
     const paymentDataRequest = await getGooglePaymentDataRequest(
       purchaseAmount,
@@ -151,16 +134,17 @@ async function setupGooglePayButton(sdkInstance) {
     if (isReadyToPay.result) {
       const button = paymentsClient.createButton({
         onClick: async () => {
-          if (get_session_basket_purchase_units_items().length < 1) {
-              await update_session_from_ui(current_product_object).then(function () {
-                  update_add_to_cart_cta_based_on_cart();
-              });
-          }
-          onGooglePayButtonClick(
+        
+        if (get_session_basket_purchase_units_items().length < 1) {
+            await update_session_from_ui(current_product_object).then(function () {
+                update_add_to_cart_cta_based_on_cart();
+            });
+        }
+        onGooglePayButtonClick(
             purchaseAmount,
             paymentsClient,
             googlePayConfig,
-          );
+        );
         }
       });
 
