@@ -131,20 +131,21 @@ async function onPaymentDataChanged(payment_data) {
   let response_update = {};
 
   let state = "";
-  if (payment_data && payment_data.shippingAddress && typeof payment_data.shippingAddress.administrativeArea === "string") {
+  if (payment_data.shippingAddress && typeof payment_data.shippingAddress.administrativeArea === "string") {
     state = payment_data.shippingAddress.administrativeArea;
   }
 
   if (state === "AZ") {
+    console.log("This is AZ");
     // This is just to demonstrate a "Custom" shipping rule. You can make
     // Any rule here, this is just a simple example of how to display dynamic changes
     // You don't need this if statement, this is just to demo
     response_update = await handle_custom_payment_data_change_rules(payment_data);
   } else {
-    if (payment_data && payment_data.callbackTrigger === "SHIPPING_OPTION") {
+    if (payment_data.callbackTrigger === "SHIPPING_OPTION") {
       console.log("shipping option change");
       response_update = await handle_google_pay_shipping_options_change(payment_data);
-    } else if (payment_data && payment_data.callbackTrigger === "SHIPPING_ADDRESS") {
+    } else if (payment_data.callbackTrigger === "SHIPPING_ADDRESS") {
       console.log("here?");
       response_update = await handle_google_pay_shipping_address_change(payment_data);
     }
