@@ -135,7 +135,7 @@ async function onPaymentDataChanged(payment_data) {
     state = payment_data.shippingAddress.administrativeArea;
   }
 
-  if (state === "CA") {
+  if (state === "AZ") {
     // This is just to demonstrate a "Custom" shipping rule. You can make
     // Any rule here, this is just a simple example of how to display dynamic changes
     // You don't need this if statement, this is just to demo
