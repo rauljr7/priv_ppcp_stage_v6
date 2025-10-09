@@ -302,7 +302,7 @@ async function handle_custom_payment_data_change_rules(payment_data) {
       shippingOptions: shipping_options
     };
     return response_update;
-  } else if (trigger === "SHIPPING_ADDRESS") {
+  } else if (trigger === "SHIPPING_ADDRESS" || trigger === "INITIALIZE") {
     let country_code = "";
     if (payment_data.shippingAddress && typeof payment_data.shippingAddress.countryCode === "string") {
       country_code = payment_data.shippingAddress.countryCode;
