@@ -152,6 +152,7 @@ async function onPaymentDataChanged(payment_data) {
   }
 
   await remap_google_payload_to_session(payment_data);
+  console.log(response_update);
   return response_update;
 }
 
