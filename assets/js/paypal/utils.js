@@ -32,7 +32,7 @@ function paymentSessionOptions(payment_type) {
             run_loading({id: payment_type, message: "Processing Payment..."});
             set_session_transaction_payload(orderData).then(() => {
                 let sid = get_session_id();
-                window.location.assign(`receipt.html?session=${encodeURIComponent(sid)}`);
+                //window.location.assign(`receipt.html?session=${encodeURIComponent(sid)}`);
             });
 
         },
