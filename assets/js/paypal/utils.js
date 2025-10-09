@@ -83,7 +83,7 @@ async function onPayPalWebSdkLoaded() {
       const clientToken = await getBrowserSafeClientToken();
       sdkInstance = await window.paypal.createInstance({
          clientToken,
-         components: ["paypal-payments", "paypal-messages", "venmo-payments", "googlepay-payments"]
+         components: ["paypal-payments", "paypal-messages", "venmo-payments", "googlepay-payments", "card-fields"]
       });
    } catch (error) {
       console.error(error);
@@ -102,5 +102,8 @@ async function onPayPalWebSdkLoaded() {
    }
    if (typeof window.initGooglePay === "function") {
       window.initGooglePay();
+   }
+   if (typeof window.onPayPalWebSdkLoaded === "function") {
+      window.onPayPalWebSdkLoaded();
    }
 }
