@@ -65,11 +65,17 @@ async function setupCardFields(sdk) {
               break;
             }
             case "canceled": {
+               error_notification("Payment Failed. Please Try Again.", {
+                sticky: true
+              });
               // Buyer dismissed 3DS modal or canceled the flow
               // TODO: show non-blocking message & allow retry
               break;
             }
             case "failed": {
+               error_notification("Payment Failed. Please Try Again.", {
+                sticky: true
+              });
               // Validation or processing failure. data.message may be present
               console.error("Card submission failed", data);
               // TODO: surface error to buyer, allow retry
@@ -81,6 +87,9 @@ async function setupCardFields(sdk) {
             }
           }
         } catch (err) {
+               error_notification("Payment Error. Please Try Again.", {
+                sticky: true
+              });
           console.error("Payment flow error", err);
           window.remove_loading?.({ id: "card-fields" });
           // TODO: Show generic error and allow retry
