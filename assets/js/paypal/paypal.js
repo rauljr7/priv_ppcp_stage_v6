@@ -20,7 +20,7 @@ async function setupPayPalButton(paypalPaymentSession) {
                     update_add_to_cart_cta_based_on_cart();
                 });
             }
-            const createOrderIdPromiseReference = createOrder();
+            let createOrderIdPromiseReference = createOrder();
             try {
                 await paypalPaymentSession.start(
                 { presentationMode: "auto" },

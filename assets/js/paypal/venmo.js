@@ -18,7 +18,7 @@ if (paymentMethods.isEligible("venmo")) {
                     update_add_to_cart_cta_based_on_cart();
                 });
             }
-            const createOrderIdPromiseReference = createOrder("venmo");
+            let createOrderIdPromiseReference = createOrder("venmo");
             try {
                 await venmoPaymentSession.start({
                         presentationMode: "auto"

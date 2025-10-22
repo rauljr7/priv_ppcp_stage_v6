@@ -37,6 +37,56 @@ async function setupCardFields(sdk) {
   document.querySelector("#paypal-card-fields-expiry").appendChild(expiryField);
   document.querySelector("#paypal-card-fields-cvv").appendChild(cvvField);
 
-  let payButton = document.querySelector("#pay-button");
+  document.addEventListener("click", async (event) => {
+
+      if (event.target.hasAttribute("summary_place_order_btn")) {
+          try {
+          let orderPayload = await createOrder("card");
+          console.log(orderPayload);
+          const {
+            data,
+            state
+          } = await cardSession.submit(orderPayload.orderId, {
+            billingAddress: {
+              postalCode: "95131"
+            },
+          });
+          console.log(data);
+
+          switch (state) {
+            case "succeeded": {
+              const {
+                orderPayload,
+                liabilityShift
+              } = data
+              // 3DS may or may not have occurred; Use liabilityShift 
+              // to determine if the payment should be captured
+              const capture = await captureOrder(orderPayload);
+              // TODO: show success UI, redirect, etc.
+              break;
+            }
+            case "canceled": {
+              // Buyer dismissed 3DS modal or canceled the flow
+              // TODO: show non-blocking message & allow retry
+              break;
+            }
+            case "failed": {
+              // Validation or processing failure. data.message may be present
+              console.error("Card submission failed", data);
+              // TODO: surface error to buyer, allow retry
+              break;
+            }
+            default: {
+              // Future-proof for other states (e.g., pending)
+              console.warn("Unhandled submit state", state, data);
+            }
+          }
+        } catch (err) {
+          console.error("Payment flow error", err);
+          // TODO: Show generic error and allow retry
+        }
+            }
+
+  });
   window.remove_loading?.({ id: "card-fields" });
 }
