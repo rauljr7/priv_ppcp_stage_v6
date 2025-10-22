@@ -3,31 +3,32 @@ let NOTIFICATIONS_HOST_ID  = "notifications_host";
 let notifications_seq      = 0;
 
 function ensure_notification_styles() {
-  let style_el = document.getElementById(NOTIFICATIONS_STYLE_ID);
-  if (style_el) return;
+  if (document.getElementById("notifications_style")) return;
 
-  let css = ""
-    + ":root{--note-radius:18px;--note-shadow:0 18px 40px rgba(0,0,0,.25);--note-text:#111;--note-bg:#fff;--note-border:#E5E7EB;--note-success:#10b981;--note-error:#dc2626;--note-info:#f59e0b;--note-neutral:#6b7280}"
-    + "#" + NOTIFICATIONS_HOST_ID + "{position:fixed;top:24px;left:0;right:0;z-index:10000;display:grid;justify-items:center;align-items:start;gap:12px;padding:0 16px;pointer-events:none}"
-    + "#" + NOTIFICATIONS_HOST_ID + ".has_backdrop{bottom:0;background:rgba(0,0,0,.35)}"
-    + ".note{pointer-events:auto;display:flex;align-items:flex-start;gap:14px;min-width:360px;max-width:min(94vw,720px);background:var(--note-bg);border-radius:var(--note-radius);box-shadow:var(--note-shadow);border:1px solid var(--note-border);padding:18px 20px;position:relative;transform:translateY(-6px);opacity:0;animation:note_in .18s ease forwards}"
-    + ".note_type{width:12px;min-width:12px;height:auto;border-radius:10px}"
-    + ".note_body{font:700 16px/1.4 system-ui,-apple-system,Segoe UI,Roboto,Inter,Arial,sans-serif;color:var(--note-text);flex:1}"
-    + ".note_actions{display:flex;align-items:center}"
-    + ".note_close{appearance:none;cursor:pointer;border:0;background:transparent;color:#4b5563;font:700 18px/1 system-ui,-apple-system,Segoe UI,Roboto,Inter,Arial,sans-serif;padding:6px;margin:-6px;border-radius:10px}"
-    + ".note_close:hover{background:#f3f4f6;color:#111}"
-    + ".note.success .note_type{background:var(--note-success)}"
-    + ".note.error   .note_type{background:var(--note-error)}"   // red
-    + ".note.info    .note_type{background:var(--note-info)}"    // yellow
-    + ".note.warn    .note_type{background:var(--note-neutral)}" // neutral
-    + ".note.default .note_type{background:var(--note-neutral)}"
-    + "@keyframes note_in{to{opacity:1;transform:translateY(0)}}";
+  let css =
+  '#notifications_host{position:fixed;top:20px;left:0;right:0;display:flex;justify-content:center;z-index:9999;pointer-events:none}' +
+  '.note{pointer-events:auto;display:flex;align-items:center;gap:14px;min-width:320px;max-width:640px;background:#fff;border:1px solid #e5e7eb;border-radius:14px;box-shadow:0 12px 30px rgba(0,0,0,.18);padding:16px 16px 16px 0;font:600 16px/1.4 system-ui,-apple-system,Segoe UI,Roboto,Inter,Arial,sans-serif;color:#111}' +
+  '.note_type{width:8px;align-self:stretch;background:#2563eb;border-top-left-radius:14px;border-bottom-left-radius:14px;flex:0 0 8px}' +
+  '.note_body{flex:1;padding:0 2px}' +
+  '.note_actions{display:flex;align-items:center;gap:8px}' +
+  '.note_close{appearance:none;border:0;background:transparent;cursor:pointer;font-size:20px;line-height:1;padding:0 6px;color:#111;opacity:.9}' +
+  '.note_close:hover{opacity:1}' +
 
-  style_el = document.createElement("style");
-  style_el.id = NOTIFICATIONS_STYLE_ID;
-  style_el.type = "text/css";
-  style_el.appendChild(document.createTextNode(css));
-  document.head.appendChild(style_el);
+  /* Make entire card tinted by type */
+  '.note.error{background:#fef2f2;border-color:#fecaca}' +
+  '.note.info{background:#fffbeb;border-color:#fde68a}' +
+  '.note.success{background:#f0fdf4;border-color:#bbf7d0}' +
+
+  /* Keep the accent bar strong too */
+  '.note.error .note_type{background:#dc2626}' +
+  '.note.info .note_type{background:#f59e0b}' +
+  '.note.success .note_type{background:#16a34a}';
+
+  let style = document.createElement("style");
+  style.id = "notifications_style";
+  style.type = "text/css";
+  style.appendChild(document.createTextNode(css));
+  document.head.appendChild(style);
 }
 
 function ensure_notification_host(backdrop) {
