@@ -1,4 +1,53 @@
 "use strict";
+window.receipt_items_cache = null;
+
+function getItemsFromAny(tx) {
+  if (Array.isArray(window.receipt_items_cache) && window.receipt_items_cache.length) {
+    return window.receipt_items_cache;
+  }
+
+  try {
+    if (typeof get_session_basket_purchase_units_items === "function") {
+      const arr = get_session_basket_purchase_units_items();
+      if (Array.isArray(arr) && arr.length) {
+        window.receipt_items_cache = arr.slice();
+        return window.receipt_items_cache;
+      }
+    }
+  } catch (_) {}
+
+  try {
+    const raw = localStorage.getItem("website_session");
+    if (raw) {
+      const ws  = JSON.parse(raw);
+      const pu0 = ws?.basket?.purchase_units?.[0];
+      if (Array.isArray(pu0?.items) && pu0.items.length) {
+        window.receipt_items_cache = pu0.items.slice();
+        return window.receipt_items_cache;
+      }
+    }
+  } catch (_) {}
+
+  try {
+    const ws  = window.website_session;
+    const pu0 = ws?.basket?.purchase_units?.[0];
+    if (Array.isArray(pu0?.items) && pu0.items.length) {
+      window.receipt_items_cache = pu0.items.slice();
+      return window.receipt_items_cache;
+    }
+  } catch (_) {}
+
+  try {
+    const x   = tx || window.receipt_last_tx || window.transaction_payload || null;
+    const pu0 = Array.isArray(x?.purchase_units) ? x.purchase_units[0] : null;
+    if (Array.isArray(pu0?.items) && pu0.items.length) {
+      window.receipt_items_cache = pu0.items.slice();
+      return window.receipt_items_cache;
+    }
+  } catch (_) {}
+
+  return [];
+}
 
 /* ========= Helpers ========= */
 function $(sel) { return document.querySelector(sel); }
@@ -158,40 +207,12 @@ function getWebsiteSessionPU0() {
   } catch (_) { return null; }
 }
 
-function renderItemsFromSession() {
+function renderItemsFromSession(tx) {
   const body = document.getElementById("items_tbody");
   if (!body) return;
   while (body.firstChild) body.removeChild(body.firstChild);
 
-  let items = [];
-
-  // 1) Preferred: live session helper
-  try {
-    if (typeof get_session_basket_purchase_units_items === "function") {
-      const arr = get_session_basket_purchase_units_items();
-      if (Array.isArray(arr) && arr.length) items = arr;
-    }
-  } catch (_) {}
-
-  // 2) Fallback: website_session from localStorage
-  if (!items.length) {
-    try {
-      const raw = localStorage.getItem("website_session");
-      const ws  = raw ? JSON.parse(raw) : null;
-      const pu0 = ws?.basket?.purchase_units?.[0];
-      const arr = Array.isArray(pu0?.items) ? pu0.items : [];
-      if (arr.length) items = arr;
-    } catch (_) {}
-  }
-
-  // 3) Fallback: transaction payload (rarely has items, but try)
-  if (!items.length) {
-    const tx   = window.receipt_last_tx || window.transaction_payload || null;
-    const pu0  = Array.isArray(tx?.purchase_units) ? tx.purchase_units[0] : null;
-    const arr  = Array.isArray(pu0?.items) ? pu0.items : [];
-    if (arr.length) items = arr;
-  }
-
+  const items = getItemsFromAny(tx);
   if (!items.length) return;
 
   items.forEach((it) => {
@@ -445,7 +466,10 @@ function ensureDirectCard() {
 /* ========= Public API ========= */
 window.receipt = {
   setTransaction: function (tx) {
-    window.receipt_last_tx = tx;   // <— remember tx for fallbacks
+    window.receipt_last_tx = tx;
+    // prime items cache from whatever is available
+    window.receipt_items_cache = null;
+    getItemsFromAny(tx);
 
     fillOrderMeta(tx);
     fillAddresses(tx);
@@ -455,7 +479,7 @@ window.receipt = {
     const bpGrid = document.querySelector("#section_buyer_payment .info-grid");
     toggleTwoCol(bpGrid, hasBuyer && hasPayment);
 
-    renderItemsFromSession();
+    renderItemsFromSession(tx);
     fillTotalsFromSession(tx);
   },
   setTotals: function ({ items, shipping, total } = {}) {
