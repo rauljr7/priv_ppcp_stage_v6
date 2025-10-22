@@ -1,208 +1,133 @@
-let NOTIFICATIONS_STYLE_ID = "NOTIFICATIONS_STYLE";
-let NOTIFICATIONS_HOST_ID  = "notifications_host";
+/* ========= Notifications ========= */
+
+let notifications_style_id = "notifications_style";
+let notifications_host_id  = "notifications_host";
 let notifications_seq      = 0;
 
 function ensure_notification_styles() {
-  if (document.getElementById("notifications_style")) return;
+  let existing = document.getElementById(notifications_style_id);
+  if (existing) return;
 
-  let css =
-  '#notifications_host{position:fixed;top:20px;left:0;right:0;display:flex;justify-content:center;z-index:9999;pointer-events:none}' +
-  '.note{pointer-events:auto;display:flex;align-items:center;gap:14px;min-width:320px;max-width:640px;background:#fff;border:1px solid #e5e7eb;border-radius:14px;box-shadow:0 12px 30px rgba(0,0,0,.18);padding:16px 16px 16px 0;font:600 16px/1.4 system-ui,-apple-system,Segoe UI,Roboto,Inter,Arial,sans-serif;color:#111}' +
-  '.note_type{width:8px;align-self:stretch;background:#2563eb;border-top-left-radius:14px;border-bottom-left-radius:14px;flex:0 0 8px}' +
-  '.note_body{flex:1;padding:0 2px}' +
-  '.note_actions{display:flex;align-items:center;gap:8px}' +
-  '.note_close{appearance:none;border:0;background:transparent;cursor:pointer;font-size:20px;line-height:1;padding:0 6px;color:#111;opacity:.9}' +
-  '.note_close:hover{opacity:1}' +
+  let css = ""
+    + "#"+notifications_host_id+"{position:fixed;top:20px;left:0;right:0;display:flex;flex-direction:column;align-items:center;gap:12px;z-index:9999;pointer-events:none}"
+    + ".note{pointer-events:auto;display:flex;align-items:center;gap:14px;min-width:360px;max-width:760px;background:#fff;border:1px solid #e5e7eb;border-radius:16px;box-shadow:0 14px 36px rgba(0,0,0,.18);padding:18px 18px;font:700 18px/1.45 system-ui,-apple-system,Segoe UI,Roboto,Inter,Arial,sans-serif;color:#111}"
+    + ".note_body{flex:1;padding:0 2px}"
+    + ".note_actions{display:flex;align-items:center;gap:8px}"
+    + ".note_close{appearance:none;border:0;background:transparent;cursor:pointer;font-size:22px;line-height:1;padding:0 8px;color:#111;opacity:.9}"
+    + ".note_close:hover{opacity:1}"
 
-  /* Make entire card tinted by type */
-  '.note.error{background:#fef2f2;border-color:#fecaca}' +
-  '.note.info{background:#fffbeb;border-color:#fde68a}' +
-  '.note.success{background:#f0fdf4;border-color:#bbf7d0}' +
-
-  /* Keep the accent bar strong too */
-  '.note.error .note_type{background:#dc2626}' +
-  '.note.info .note_type{background:#f59e0b}' +
-  '.note.success .note_type{background:#16a34a}';
+    /* Tinted cards by type */
+    + ".note.error{background:#fef2f2;border-color:#fecaca}"
+    + ".note.info{background:#fffbeb;border-color:#fde68a}"
+    + ".note.success{background:#f0fdf4;border-color:#bbf7d0}";
 
   let style = document.createElement("style");
-  style.id = "notifications_style";
+  style.id = notifications_style_id;
   style.type = "text/css";
   style.appendChild(document.createTextNode(css));
   document.head.appendChild(style);
 }
 
-function ensure_notification_host(backdrop) {
-  let host = document.getElementById(NOTIFICATIONS_HOST_ID);
-  if (!host) {
-    host = document.createElement("div");
-    host.id = NOTIFICATIONS_HOST_ID;
-    document.body.appendChild(host);
-  }
-  if (backdrop) {
-    host.classList.add("has_backdrop");
-  } else {
-    host.classList.remove("has_backdrop");
-  }
+function ensure_notification_host() {
+  let host = document.getElementById(notifications_host_id);
+  if (host) return host;
+
+  host = document.createElement("div");
+  host.id = notifications_host_id;
+  host.setAttribute("aria-live", "polite");
+  host.setAttribute("aria-atomic", "true");
+  document.body.appendChild(host);
   return host;
 }
 
-function dismiss_notification(id) {
-  let host = document.getElementById(NOTIFICATIONS_HOST_ID);
-  if (!host) return false;
-
-  let el = host.querySelector('.note[data-id="' + id + '"]');
-  if (!el) return false;
-
-  if (el._meta && el._meta.timer) clearTimeout(el._meta.timer);
-  if (el._meta && el._meta.on_key) document.removeEventListener("keydown", el._meta.on_key);
-
-  el.style.transition = "opacity .14s ease, transform .14s ease";
-  el.style.opacity = "0";
-  el.style.transform = "translateY(-6px)";
-  setTimeout(function () {
-    if (el && el.parentNode) el.parentNode.removeChild(el);
-    let has_any = host.querySelector(".note") != null;
-    if (!has_any) host.classList.remove("has_backdrop");
-  }, 160);
-
-  return true;
+function next_notification_id() {
+  notifications_seq = notifications_seq + 1;
+  let id = "note_" + String(notifications_seq);
+  return id;
 }
 
-function dismiss_all_notifications() {
-  let host = document.getElementById(NOTIFICATIONS_HOST_ID);
-  if (!host) return;
-  let list = host.querySelectorAll(".note");
-  let i = 0;
-  while (i < list.length) {
-    let el = list[i];
-    let id = el.getAttribute("data-id");
-    dismiss_notification(id);
-    i = i + 1;
+function hide_notification_by_id(id) {
+  let el = document.querySelector('[data-id="'+id+'"]');
+  if (!el) return;
+  if (el.parentNode) {
+    el.parentNode.removeChild(el);
   }
 }
 
-function create_notification(opts) {
+function show_notification(message, type, options) {
+  if (!message) message = "";
+  if (!type) type = "";
+  if (!options) options = {};
+
   ensure_notification_styles();
+  let host = ensure_notification_host();
 
-  let message = "";
-  let type = "default";
-  let sticky = false;
-  let duration = 3500;
-  let backdrop = false;
-  let aria_role = "";
-
-  if (opts && typeof opts.message === "string") message = opts.message;
-  if (opts && typeof opts.type === "string") type = opts.type;
-  if (opts && typeof opts.sticky === "boolean") sticky = opts.sticky;
-  if (opts && typeof opts.duration === "number") duration = opts.duration;
-  if (opts && typeof opts.backdrop === "boolean") backdrop = opts.backdrop;
-  if (opts && typeof opts.aria_role === "string") aria_role = opts.aria_role;
-
-  let host = ensure_notification_host(backdrop);
-
-  notifications_seq = notifications_seq + 1;
-  let id = "note_" + notifications_seq;
+  let id = next_notification_id();
 
   let note = document.createElement("div");
-  note.className = "note " + type;
+  note.className = "note";
+  note.setAttribute("role", "alert");
   note.setAttribute("data-id", id);
 
-  if (aria_role && aria_role.length > 0) {
-    note.setAttribute("role", aria_role);
-  } else {
-    if (type === "error") {
-      note.setAttribute("role", "alert");
-      note.setAttribute("aria-live", "assertive");
-    } else {
-      note.setAttribute("role", "status");
-      note.setAttribute("aria-live", "polite");
-    }
+  if (type === "error") {
+    note.classList.add("error");
+  } else if (type === "info") {
+    note.classList.add("info");
+  } else if (type === "success") {
+    note.classList.add("success");
   }
 
-  note.innerHTML = ""
-    + '<div class="note_type" aria-hidden="true"></div>'
-    + '<div class="note_body">' + (message || "") + '</div>'
-    + '<div class="note_actions">'
-    +   '<button class="note_close" type="button" aria-label="Dismiss notification">×</button>'
-    + '</div>';
+  let body = document.createElement("div");
+  body.className = "note_body";
+  body.textContent = message;
 
-  let close_btn = note.querySelector(".note_close");
-  if (close_btn) {
-    close_btn.addEventListener("click", function () {
-      dismiss_notification(id);
-    });
-  }
+  let actions = document.createElement("div");
+  actions.className = "note_actions";
 
-  let on_key = function (e) {
-    if (!e) return;
-    if (e.key === "Escape") {
-      let last = host.querySelector(".note:last-of-type");
-      if (last) {
-        let last_id = last.getAttribute("data-id");
-        if (last_id === id) {
-          dismiss_notification(id);
-        }
-      }
-    }
-  };
-  document.addEventListener("keydown", on_key);
+  let btn_close = document.createElement("button");
+  btn_close.className = "note_close";
+  btn_close.type = "button";
+  btn_close.setAttribute("aria-label", "Dismiss notification");
+  btn_close.textContent = "×";
+  btn_close.addEventListener("click", function () {
+    hide_notification_by_id(id);
+  });
 
+  actions.appendChild(btn_close);
+  note.appendChild(body);
+  note.appendChild(actions);
   host.appendChild(note);
 
-  let timer = null;
-  if (!sticky) {
-    if (duration > 0) {
-      timer = setTimeout(function () {
-        dismiss_notification(id);
-      }, duration);
-    }
+  let auto_hide_ms = 0;
+  if (typeof options.auto_hide_ms === "number") {
+    auto_hide_ms = options.auto_hide_ms;
   }
 
-  note._meta = { on_key: on_key, timer: timer, backdrop: backdrop };
+  if (auto_hide_ms > 0) {
+    window.setTimeout(function () {
+      hide_notification_by_id(id);
+    }, auto_hide_ms);
+  }
 
   return id;
 }
 
-function show_notification(message, opts) {
-  let options = opts || {};
-  options.message = message;
-  return create_notification(options);
+/* Convenience helpers */
+function notify_error(message) {
+  let opts = {};
+  /* sticky by default (no auto-hide) */
+  return show_notification(message, "error", opts);
 }
 
-function success_notification(message, opts) {
-  let options = opts || {};
-  options.message = message;
-  options.type = "success";
-  return create_notification(options);
+function notify_info(message) {
+  let opts = {};
+  /* sticky by default; change to opts.auto_hide_ms = 5000 if desired */
+  return show_notification(message, "info", opts);
 }
 
-function error_notification(message, opts) {
-  let options = opts || {};
-  options.message = message;
-  options.type = "error";
-  options.aria_role = "alert";
-  return create_notification(options);
+function notify_success(message) {
+  let opts = {};
+  /* auto-hide success after 4s (edit as needed) */
+  opts.auto_hide_ms = 4000;
+  return show_notification(message, "success", opts);
 }
-
-function info_notification(message, opts) {
-  let options = opts || {};
-  options.message = message;
-  options.type = "info"; // yellow
-  return create_notification(options);
-}
-
-function warn_notification(message, opts) {
-  let options = opts || {};
-  options.message = message;
-  options.type = "warn"; // neutral stripe
-  return create_notification(options);
-}
-
-if (!window.notifications) window.notifications = {};
-window.notifications.show = show_notification;
-window.notifications.success = success_notification;
-window.notifications.error = error_notification;
-window.notifications.info = info_notification;
-window.notifications.warn = warn_notification;
-window.notifications.dismiss = dismiss_notification;
-window.notifications.dismissAll = dismiss_all_notifications;
