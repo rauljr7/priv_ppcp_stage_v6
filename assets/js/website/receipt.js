@@ -16,12 +16,23 @@ function joinCityStatePostal(a) {
 }
 function hasAny(values) { return values.some(v => typeof v === "string" ? v.trim().length > 0 : !!v); }
 
-
-
 function fillBuyer(tx) {
-  const name = tx?.payer?.name ? [tx.payer.name.given_name, tx.payer.name.surname].filter(Boolean).join(" ") : "";
-  const email = tx?.payer?.email_address || "";
-  const phone = tx?.payer?.phone?.phone_number?.national_number || "";
+  let name  = tx?.payer?.name ? [tx.payer.name.given_name, tx.payer.name.surname].filter(Boolean).join(" ") : "";
+  let email = tx?.payer?.email_address || "";
+  let phone = tx?.payer?.phone?.phone_number?.national_number || "";
+
+  if (!name || !email || !phone) {
+    try {
+      const raw = localStorage.getItem("website_session");
+      const ws  = raw ? JSON.parse(raw) : null;
+      const ci  = ws?.contact_information || {};
+      const si  = ws?.shipping_information || {};
+      const bi  = ws?.billing_information || {};
+      if (!name && (si.full_name || bi.full_name)) name = si.full_name || bi.full_name || name;
+      if (!email && ci.email) email = ci.email;
+      if (!phone && (si.phone || bi.phone)) phone = si.phone || bi.phone || phone;
+    } catch (_) {}
+  }
 
   set("buyer_name", name || "—");
   set("buyer_email", email || "—");
@@ -36,72 +47,82 @@ function fillPayment(tx) {
   let ps = tx && tx.payment_source ? tx.payment_source : {};
   let has_payment = false;
 
+  // PayPal
   if (ps.paypal) {
     set("pp_email", ps.paypal.email_address || "—");
     set("pp_account_id", ps.paypal.account_id || "—");
     set("pp_account_status", ps.paypal.account_status || "—");
     showById("payment_paypal", true);
-    let gp_card_el = document.getElementById("payment_googlepay");
-    if (gp_card_el) gp_card_el.classList.add("hide");
-    let vn_card_el = document.getElementById("payment_venmo");
-    if (vn_card_el) vn_card_el.classList.add("hide");
+    const gp = document.getElementById("payment_googlepay"); if (gp) gp.classList.add("hide");
+    const vn = document.getElementById("payment_venmo");     if (vn) vn.classList.add("hide");
+    const cd = document.getElementById("payment_card");      if (cd) cd.classList.add("hide");
     has_payment = true;
   } else {
     showById("payment_paypal", false);
   }
 
+  // Google Pay
   if (ps.google_pay) {
-    let card_el = ensureGooglePayCard();
-    if (card_el) card_el.classList.remove("hide");
-
-    let gp = ps.google_pay;
-    let gc = gp.card || {};
-    let brand = gc.brand || "";
-    let last = gc.last_digits || "";
-    let display = "";
-    if (brand && last) display = brand + " •••• " + last;
-    else if (brand) display = brand;
-    else if (last) display = "•••• " + last;
-    else display = "—";
-
+    const el = ensureGooglePayCard(); if (el) el.classList.remove("hide");
+    const gc = ps.google_pay.card || {};
+    const brand = gc.brand || "";
+    const last  = gc.last_digits || "";
+    const display = brand && last ? `${brand} •••• ${last}` : (brand || (last ? `•••• ${last}` : "—"));
     set("gp_card", display);
     set("gp_type", gc.type || "—");
-    set("gp_name", gp.name || gc.name || "—");
+    set("gp_name", ps.google_pay.name || gc.name || "—");
 
-    let vn_card_el = document.getElementById("payment_venmo");
-    if (vn_card_el) vn_card_el.classList.add("hide");
-
+    const vn = document.getElementById("payment_venmo"); if (vn) vn.classList.add("hide");
+    const cd = document.getElementById("payment_card");  if (cd) cd.classList.add("hide");
+    showById("payment_paypal", false);
     has_payment = true;
+  } else {
+    const el = document.getElementById("payment_googlepay");
+    if (el) el.classList.add("hide");
   }
 
+  // Venmo
   if (ps.venmo) {
-    let vcard = ensureVenmoCard();
-    if (vcard) vcard.classList.remove("hide");
-
-    let v = ps.venmo;
+    const vcard = ensureVenmoCard(); if (vcard) vcard.classList.remove("hide");
+    const v = ps.venmo;
     let venmo_name = "";
     if (v && v.name) {
-      let gn = v.name.given_name || "";
-      let sn = v.name.surname || "";
-      venmo_name = [gn, sn].filter(Boolean).join(" ");
-    }
-    if (!venmo_name && tx && tx.payer && tx.payer.name) {
+      venmo_name = [v.name.given_name || "", v.name.surname || ""].filter(Boolean).join(" ");
+    } else if (tx?.payer?.name) {
       venmo_name = [tx.payer.name.given_name, tx.payer.name.surname].filter(Boolean).join(" ");
     }
-
     set("vn_email", v.email_address || tx?.payer?.email_address || "—");
     set("vn_account_id", v.account_id || tx?.payer?.payer_id || "—");
     set("vn_name", venmo_name || "—");
-    set("vn_phone", (v.phone_number && v.phone_number.national_number) || (tx?.payer?.phone?.phone_number?.national_number) || "—");
+    set("vn_phone", v?.phone_number?.national_number || tx?.payer?.phone?.phone_number?.national_number || "—");
 
-    // Hide GPay card if it was previously shown
-    let gp_card_el = document.getElementById("payment_googlepay");
-    if (gp_card_el) gp_card_el.classList.add("hide");
-
+    const gp = document.getElementById("payment_googlepay"); if (gp) gp.classList.add("hide");
+    const cd = document.getElementById("payment_card");      if (cd) cd.classList.add("hide");
+    showById("payment_paypal", false);
     has_payment = true;
   } else {
-    let vn_card_el = document.getElementById("payment_venmo");
-    if (vn_card_el) vn_card_el.classList.add("hide");
+    const el = document.getElementById("payment_venmo");
+    if (el) el.classList.add("hide");
+  }
+
+  // Direct Card (payment_source.card)
+  if (ps.card) {
+    const el = ensureDirectCard(); if (el) el.classList.remove("hide");
+    const c = ps.card;
+    const brand = c.brand || "";
+    const last  = c.last_digits || "";
+    const display = brand && last ? `${brand} •••• ${last}` : (brand || (last ? `•••• ${last}` : "—"));
+    set("cd_card", display);
+    set("cd_type", c.type || "—");
+    set("cd_expiry", c.expiry || "—");
+
+    const gp = document.getElementById("payment_googlepay"); if (gp) gp.classList.add("hide");
+    const vn = document.getElementById("payment_venmo");     if (vn) vn.classList.add("hide");
+    showById("payment_paypal", false);
+    has_payment = true;
+  } else {
+    const el = document.getElementById("payment_card");
+    if (el) el.classList.add("hide");
   }
 
   showById("section_payment", has_payment);
@@ -223,11 +244,12 @@ function fillTotalsFromSession(tx) {
 }
 
 function fillAddresses(tx) {
-  let gp = tx && tx.payment_source && tx.payment_source.google_pay ? tx.payment_source.google_pay : null;
-  let gp_card = gp && gp.card ? gp.card : null;
+  const gp = tx?.payment_source?.google_pay || null;
+  const gp_card = gp?.card || null;
 
+  // Billing name
   let billing_name = "";
-  if (tx && tx.payer && tx.payer.name) {
+  if (tx?.payer?.name) {
     billing_name = [tx.payer.name.given_name, tx.payer.name.surname].filter(Boolean).join(" ");
   } else if (gp && typeof gp.name === "string") {
     billing_name = gp.name;
@@ -235,83 +257,98 @@ function fillAddresses(tx) {
     billing_name = gp_card.name;
   }
 
-  let billing_addr = null;
-  if (tx && tx.payer && tx.payer.address) {
-    billing_addr = tx.payer.address;
-  } else if (gp_card && gp_card.billing_address) {
-    billing_addr = gp_card.billing_address;
+  // Billing address (tx → gp_card → session fallback)
+  let billing_addr = tx?.payer?.address || gp_card?.billing_address || null;
+
+  if (!billing_addr) {
+    try {
+      const raw = localStorage.getItem("website_session");
+      const ws  = raw ? JSON.parse(raw) : null;
+      const b   = ws?.billing_information;
+      if (b) {
+        billing_name = b.full_name || billing_name;
+        billing_addr = {
+          address_line_1: b.address_line_1 || "",
+          admin_area_2:   b.city || "",
+          admin_area_1:   b.state_province || "",
+          postal_code:    b.postal_code || "",
+          country_code:   b.country || "US"
+        };
+      }
+    } catch (_) {}
   }
 
   set("billing_name", billing_name || "—");
-  set("billing_line1", billing_addr && billing_addr.address_line_1 ? billing_addr.address_line_1 : "—");
+  set("billing_line1", billing_addr?.address_line_1 || "—");
   set("billing_city_state_postal", joinCityStatePostal(billing_addr) || "—");
-  set("billing_country", billing_addr && billing_addr.country_code ? billing_addr.country_code : "—");
+  set("billing_country", billing_addr?.country_code || "—");
 
-  let has_billing = hasAny([
+  const has_billing = hasAny([
     billing_name,
-    billing_addr && billing_addr.address_line_1,
+    billing_addr?.address_line_1,
     joinCityStatePostal(billing_addr),
-    billing_addr && billing_addr.country_code
+    billing_addr?.country_code
   ]);
   showById("section_billing", has_billing);
 
-  let pu0 = Array.isArray(tx && tx.purchase_units) ? tx.purchase_units[0] : null;
-  let ship = pu0 && pu0.shipping ? pu0.shipping : null;
-  let ship_name = ship && ship.name && ship.name.full_name ? ship.name.full_name : "";
-  let ship_addr = ship && ship.address ? ship.address : null;
+  // Shipping (existing logic + session fallback you already had)
+  const pu0  = Array.isArray(tx?.purchase_units) ? tx.purchase_units[0] : null;
+  const ship = pu0?.shipping || null;
+  let ship_name = ship?.name?.full_name || "";
+  let ship_addr = ship?.address || null;
 
   if (!ship_addr) {
     try {
       const raw = localStorage.getItem("website_session");
-      const ws = raw ? JSON.parse(raw) : null;
-      const s = ws && ws.shipping_information ? ws.shipping_information : null;
+      const ws  = raw ? JSON.parse(raw) : null;
+      const s   = ws?.shipping_information;
       if (s) {
         ship_name = s.full_name || ship_name;
         ship_addr = {
           address_line_1: s.address_line_1 || "",
           address_line_2: s.address_line_2 || "",
-          admin_area_2: s.city || "",
-          admin_area_1: s.state_province || "",
-          postal_code: s.postal_code || "",
-          country_code: s.country || "US"
+          admin_area_2:   s.city || "",
+          admin_area_1:   s.state_province || "",
+          postal_code:    s.postal_code || "",
+          country_code:   s.country || "US"
         };
       }
     } catch (_) {}
   }
 
   set("shipping_name", ship_name || "—");
-  set("shipping_line1", ship_addr && ship_addr.address_line_1 ? ship_addr.address_line_1 : "—");
+  set("shipping_line1", ship_addr?.address_line_1 || "—");
   set("shipping_city_state_postal", joinCityStatePostal(ship_addr) || "—");
-  set("shipping_country", ship_addr && ship_addr.country_code ? ship_addr.country_code : "—");
+  set("shipping_country", ship_addr?.country_code || "—");
 
   let method = "—";
   if (ship && Array.isArray(ship.options)) {
-    let chosen = ship.options.find(function (o) { return o && o.selected; }) || ship.options[0];
+    const chosen = ship.options.find(o => o && o.selected) || ship.options[0];
     if (chosen) method = chosen.label || chosen.id || "—";
   } else {
     try {
       const raw = localStorage.getItem("website_session");
-      const ws = raw ? JSON.parse(raw) : null;
-      const sm = ws && ws.shipping_methods ? ws.shipping_methods : null;
+      const ws  = raw ? JSON.parse(raw) : null;
+      const sm  = ws?.shipping_methods;
       if (sm && Array.isArray(sm.options)) {
         const sel = sm.selected || "";
-        const found = sm.options.find(function (o) { return o && String(o.id) === String(sel); });
+        const found = sm.options.find(o => o && String(o.id) === String(sel));
         if (found) method = found.label || found.id || method;
       }
     } catch (_) {}
   }
   set("shipping_method", method);
 
-  let has_shipping = hasAny([
+  const has_shipping = hasAny([
     ship_name,
-    ship_addr && ship_addr.address_line_1,
+    ship_addr?.address_line_1,
     joinCityStatePostal(ship_addr),
-    ship_addr && ship_addr.country_code,
+    ship_addr?.country_code,
     method && method !== "—"
   ]);
   showById("section_shipping", has_shipping);
 
-  let addr_grid = document.querySelector("#section_address_grid .info-grid");
+  const addr_grid = document.querySelector("#section_address_grid .info-grid");
   toggleTwoCol(addr_grid, has_billing && has_shipping);
 
   return { hasBilling: has_billing, hasShipping: has_shipping };
@@ -358,6 +395,29 @@ function ensureVenmoCard() {
         '<div class="kv"><span class="k">Account ID</span><span id="vn_account_id" class="v">—</span></div>' +
         '<div class="kv"><span class="k">Name</span><span id="vn_name" class="v">—</span></div>' +
         '<div class="kv"><span class="k">Phone</span><span id="vn_phone" class="v">—</span></div>' +
+      '</div>' +
+    '</div>';
+  host.appendChild(card);
+  return card;
+}
+
+function ensureDirectCard() {
+  const host = document.getElementById("section_payment");
+  if (!host) return null;
+
+  let card = document.getElementById("payment_card");
+  if (card) return card;
+
+  card = document.createElement("div");
+  card.id = "payment_card";
+  card.className = "pay-card";
+  card.innerHTML =
+    '<div class="pay-row">' +
+      '<div class="pay-brand"><span class="pill">Card</span></div>' +
+      '<div class="pay-meta">' +
+        '<div class="kv"><span class="k">Card</span><span id="cd_card" class="v">—</span></div>' +
+        '<div class="kv"><span class="k">Type</span><span id="cd_type" class="v">—</span></div>' +
+        '<div class="kv"><span class="k">Expiry</span><span id="cd_expiry" class="v">—</span></div>' +
       '</div>' +
     '</div>';
   host.appendChild(card);
