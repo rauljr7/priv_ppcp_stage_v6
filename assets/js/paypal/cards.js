@@ -41,7 +41,6 @@ async function setupCardFields(sdk) {
       if (event.target.getAttribute("id") === "summary_place_order_btn") {
           try {
           let orderPayload = await createOrder("card");
-          console.log(orderPayload);
           const {
             data,
             state
@@ -51,6 +50,7 @@ async function setupCardFields(sdk) {
             },
           });
           console.log(data);
+          console.log(state);
 
           switch (state) {
             case "succeeded": {
