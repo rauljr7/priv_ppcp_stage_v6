@@ -7,19 +7,20 @@ function ensure_notification_styles() {
   if (style_el) return;
 
   let css = ""
-    + ":root{--note-radius:16px;--note-shadow:0 10px 30px rgba(0,0,0,.2);--note-text:#111;--note-bg:#fff;--note-border:#E5E7EB;--note-success:#10b981;--note-error:#ef4444;--note-info:#3b82f6;--note-warn:#f59e0b}"
-    + "#" + NOTIFICATIONS_HOST_ID + "{position:fixed;inset:0;display:grid;place-items:center;z-index:10000;pointer-events:none}"
-    + "#" + NOTIFICATIONS_HOST_ID + ".has_backdrop{background:rgba(0,0,0,.45)}"
-    + ".note{pointer-events:auto;display:flex;align-items:flex-start;gap:12px;min-width:260px;max-width:min(92vw,560px);background:var(--note-bg);border-radius:var(--note-radius);box-shadow:var(--note-shadow);border:1px solid var(--note-border);padding:16px 18px;position:relative;transform:translateY(-4px);opacity:0;animation:note_in .15s ease forwards}"
-    + ".note_type{width:10px;min-width:10px;height:100%;border-radius:8px}"
-    + ".note_body{font:600 14px/1.35 system-ui,-apple-system,Segoe UI,Roboto,Inter,Arial,sans-serif;color:var(--note-text);flex:1}"
+    + ":root{--note-radius:18px;--note-shadow:0 18px 40px rgba(0,0,0,.25);--note-text:#111;--note-bg:#fff;--note-border:#E5E7EB;--note-success:#10b981;--note-error:#dc2626;--note-info:#f59e0b;--note-neutral:#6b7280}"
+    + "#" + NOTIFICATIONS_HOST_ID + "{position:fixed;top:24px;left:0;right:0;z-index:10000;display:grid;justify-items:center;align-items:start;gap:12px;padding:0 16px;pointer-events:none}"
+    + "#" + NOTIFICATIONS_HOST_ID + ".has_backdrop{bottom:0;background:rgba(0,0,0,.35)}"
+    + ".note{pointer-events:auto;display:flex;align-items:flex-start;gap:14px;min-width:360px;max-width:min(94vw,720px);background:var(--note-bg);border-radius:var(--note-radius);box-shadow:var(--note-shadow);border:1px solid var(--note-border);padding:18px 20px;position:relative;transform:translateY(-6px);opacity:0;animation:note_in .18s ease forwards}"
+    + ".note_type{width:12px;min-width:12px;height:auto;border-radius:10px}"
+    + ".note_body{font:700 16px/1.4 system-ui,-apple-system,Segoe UI,Roboto,Inter,Arial,sans-serif;color:var(--note-text);flex:1}"
     + ".note_actions{display:flex;align-items:center}"
-    + ".note_close{appearance:none;cursor:pointer;border:0;background:transparent;color:#6b7280;font:600 16px/1 system-ui,-apple-system,Segoe UI,Roboto,Inter,Arial,sans-serif;padding:4px;margin:-4px;border-radius:8px}"
+    + ".note_close{appearance:none;cursor:pointer;border:0;background:transparent;color:#4b5563;font:700 18px/1 system-ui,-apple-system,Segoe UI,Roboto,Inter,Arial,sans-serif;padding:6px;margin:-6px;border-radius:10px}"
     + ".note_close:hover{background:#f3f4f6;color:#111}"
     + ".note.success .note_type{background:var(--note-success)}"
-    + ".note.error   .note_type{background:var(--note-error)}"
-    + ".note.info    .note_type{background:var(--note-info)}"
-    + ".note.warn    .note_type{background:var(--note-warn)}"
+    + ".note.error   .note_type{background:var(--note-error)}"   // red
+    + ".note.info    .note_type{background:var(--note-info)}"    // yellow
+    + ".note.warn    .note_type{background:var(--note-neutral)}" // neutral
+    + ".note.default .note_type{background:var(--note-neutral)}"
     + "@keyframes note_in{to{opacity:1;transform:translateY(0)}}";
 
   style_el = document.createElement("style");
@@ -54,14 +55,14 @@ function dismiss_notification(id) {
   if (el._meta && el._meta.timer) clearTimeout(el._meta.timer);
   if (el._meta && el._meta.on_key) document.removeEventListener("keydown", el._meta.on_key);
 
-  el.style.transition = "opacity .12s ease, transform .12s ease";
+  el.style.transition = "opacity .14s ease, transform .14s ease";
   el.style.opacity = "0";
-  el.style.transform = "translateY(-4px)";
+  el.style.transform = "translateY(-6px)";
   setTimeout(function () {
     if (el && el.parentNode) el.parentNode.removeChild(el);
     let has_any = host.querySelector(".note") != null;
     if (!has_any) host.classList.remove("has_backdrop");
-  }, 130);
+  }, 160);
 
   return true;
 }
@@ -83,7 +84,7 @@ function create_notification(opts) {
   ensure_notification_styles();
 
   let message = "";
-  let type = "info";
+  let type = "default";
   let sticky = false;
   let duration = 3500;
   let backdrop = false;
@@ -135,8 +136,11 @@ function create_notification(opts) {
     if (!e) return;
     if (e.key === "Escape") {
       let last = host.querySelector(".note:last-of-type");
-      if (last && last.getAttribute("data-id") === id) {
-        dismiss_notification(id);
+      if (last) {
+        let last_id = last.getAttribute("data-id");
+        if (last_id === id) {
+          dismiss_notification(id);
+        }
       }
     }
   };
@@ -182,18 +186,17 @@ function error_notification(message, opts) {
 function info_notification(message, opts) {
   let options = opts || {};
   options.message = message;
-  options.type = "info";
+  options.type = "info"; // yellow
   return create_notification(options);
 }
 
 function warn_notification(message, opts) {
   let options = opts || {};
   options.message = message;
-  options.type = "warn";
+  options.type = "warn"; // neutral stripe
   return create_notification(options);
 }
 
-// Optional: expose a simple API object as well
 if (!window.notifications) window.notifications = {};
 window.notifications.show = show_notification;
 window.notifications.success = success_notification;
