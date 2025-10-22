@@ -137,3 +137,20 @@
   justify-content: flex-end;
   margin-top: 10px;
 }
+/* Stack all totals lines on the left, one per row */
+#section_totals .totals {
+  display: flex !important;
+  flex-direction: column !important;
+  gap: 10px;
+  max-width: 420px; /* optional, keeps the block left-aligned visually */
+}
+
+#section_totals .totals .line {
+  display: flex;
+  justify-content: space-between; /* label left, value right on the same line */
+  align-items: center;
+}
+
+#section_totals .totals .line.total {
+  font-weight: 700;
+}
