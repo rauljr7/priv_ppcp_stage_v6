@@ -59,7 +59,7 @@ async function setupCardFields(sdk) {
               let orderData = await captureOrder({ orderId: orderPayload.orderId });
               set_session_transaction_payload(orderData).then(() => {
                   let sid = get_session_id();
-                  //window.location.assign(`receipt.html?session=${encodeURIComponent(sid)}`);
+                  window.location.assign(`receipt.html?session=${encodeURIComponent(sid)}`);
               });
               // TODO: show success UI, redirect, etc.
               break;
