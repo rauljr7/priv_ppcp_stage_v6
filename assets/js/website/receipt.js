@@ -114,7 +114,6 @@ function fillPayment(tx) {
     const display = brand && last ? `${brand} •••• ${last}` : (brand || (last ? `•••• ${last}` : "—"));
     set("cd_card", display);
     set("cd_type", c.type || "—");
-    set("cd_expiry", c.expiry || "—");
 
     const gp = document.getElementById("payment_googlepay"); if (gp) gp.classList.add("hide");
     const vn = document.getElementById("payment_venmo");     if (vn) vn.classList.add("hide");
@@ -164,35 +163,55 @@ function renderItemsFromSession() {
   if (!body) return;
   while (body.firstChild) body.removeChild(body.firstChild);
 
-  let pu0 = getWebsiteSessionPU0();
+  let items = [];
 
-  if (!pu0 || !Array.isArray(pu0.items) || pu0.items.length === 0) {
-    const tx = window.receipt_last_tx || window.transaction_payload || null;
-    const xpu0 = Array.isArray(tx && tx.purchase_units) ? tx.purchase_units[0] : null;
-    if (xpu0 && Array.isArray(xpu0.items) && xpu0.items.length > 0) {
-      pu0 = xpu0;
+  // 1) Preferred: live session helper
+  try {
+    if (typeof get_session_basket_purchase_units_items === "function") {
+      const arr = get_session_basket_purchase_units_items();
+      if (Array.isArray(arr) && arr.length) items = arr;
     }
+  } catch (_) {}
+
+  // 2) Fallback: website_session from localStorage
+  if (!items.length) {
+    try {
+      const raw = localStorage.getItem("website_session");
+      const ws  = raw ? JSON.parse(raw) : null;
+      const pu0 = ws?.basket?.purchase_units?.[0];
+      const arr = Array.isArray(pu0?.items) ? pu0.items : [];
+      if (arr.length) items = arr;
+    } catch (_) {}
   }
 
-  const it = pu0 && Array.isArray(pu0.items) ? pu0.items[0] : null;
-  if (!pu0 || !it) return;
+  // 3) Fallback: transaction payload (rarely has items, but try)
+  if (!items.length) {
+    const tx   = window.receipt_last_tx || window.transaction_payload || null;
+    const pu0  = Array.isArray(tx?.purchase_units) ? tx.purchase_units[0] : null;
+    const arr  = Array.isArray(pu0?.items) ? pu0.items : [];
+    if (arr.length) items = arr;
+  }
 
-  const name = it.name || "Item";
-  const qty = Math.max(1, parseInt(it.quantity || "1", 10) || 1);
-  const unitVal = (it.unit_amount && it.unit_amount.value) ? parseFloat(it.unit_amount.value) : 0;
-  const subtotal = unitVal * qty;
+  if (!items.length) return;
 
-  const row = document.createElement("div");
-  row.className = "items-row";
-  row.setAttribute("role", "row");
+  items.forEach((it) => {
+    const title = [it?.name, it?.description].filter(Boolean).join(" — ") || "Item";
+    const qty   = Math.max(1, parseInt(String(it?.quantity ?? "1"), 10) || 1);
+    const unit  = parseFloat(it?.unit_amount?.value || "0") || 0;
+    const subtotal = unit * qty;
 
-  const c1 = document.createElement("div"); c1.textContent = name;
-  const c2 = document.createElement("div"); c2.className = "num"; c2.textContent = String(qty);
-  const c3 = document.createElement("div"); c3.className = "num"; c3.textContent = fmtMoney(unitVal);
-  const c4 = document.createElement("div"); c4.className = "num"; c4.textContent = fmtMoney(subtotal);
+    const row = document.createElement("div");
+    row.className = "items-row";
+    row.setAttribute("role", "row");
 
-  row.appendChild(c1); row.appendChild(c2); row.appendChild(c3); row.appendChild(c4);
-  body.appendChild(row);
+    const c1 = document.createElement("div"); c1.textContent = title;
+    const c2 = document.createElement("div"); c2.className = "num"; c2.textContent = String(qty);
+    const c3 = document.createElement("div"); c3.className = "num"; c3.textContent = fmtMoney(unit);
+    const c4 = document.createElement("div"); c4.className = "num"; c4.textContent = fmtMoney(subtotal);
+
+    row.appendChild(c1); row.appendChild(c2); row.appendChild(c3); row.appendChild(c4);
+    body.appendChild(row);
+  });
 }
 
 function fillTotalsFromSession(tx) {
@@ -417,7 +436,6 @@ function ensureDirectCard() {
       '<div class="pay-meta">' +
         '<div class="kv"><span class="k">Card</span><span id="cd_card" class="v">—</span></div>' +
         '<div class="kv"><span class="k">Type</span><span id="cd_type" class="v">—</span></div>' +
-        '<div class="kv"><span class="k">Expiry</span><span id="cd_expiry" class="v">—</span></div>' +
       '</div>' +
     '</div>';
   host.appendChild(card);
