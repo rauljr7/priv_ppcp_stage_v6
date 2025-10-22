@@ -39,6 +39,7 @@ async function setupCardFields(sdk) {
 
   document.addEventListener("click", async (event) => {
       if (event.target.getAttribute("id") === "summary_place_order_btn") {
+          run_loading({id: "card-fields", message: "Processing Payment..."});
           try {
           let orderPayload = await createOrder("card");
           let billing_information_from_session = get_session_billing_information();
@@ -55,11 +56,10 @@ async function setupCardFields(sdk) {
 
           switch (state) {
             case "succeeded": {
-              run_loading({id: "card-fields", message: "Processing Payment..."});
               let orderData = await captureOrder({ orderId: orderPayload.orderId });
               set_session_transaction_payload(orderData).then(() => {
                   let sid = get_session_id();
-                  window.location.assign(`receipt.html?session=${encodeURIComponent(sid)}`);
+                  //window.location.assign(`receipt.html?session=${encodeURIComponent(sid)}`);
               });
               // TODO: show success UI, redirect, etc.
               break;
