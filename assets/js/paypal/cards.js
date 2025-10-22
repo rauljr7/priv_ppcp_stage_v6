@@ -55,12 +55,6 @@ async function setupCardFields(sdk) {
 
           switch (state) {
             case "succeeded": {
-              const {
-                orderPayload,
-                liabilityShift
-              } = data
-              // 3DS may or may not have occurred; Use liabilityShift 
-              // to determine if the payment should be captured
               run_loading({id: "card-fields", message: "Processing Payment..."});
               let orderData = await captureOrder({ orderId: orderPayload.orderId });
               set_session_transaction_payload(orderData).then(() => {
