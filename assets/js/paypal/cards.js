@@ -38,10 +38,7 @@ async function setupCardFields(sdk) {
   document.querySelector("#paypal-card-fields-cvv").appendChild(cvvField);
 
   document.addEventListener("click", async (event) => {
-console.log(event.target);
-console.log(event.target.hasAttribute("summary_place_order_btn"));
-      if (event.target.hasAttribute("summary_place_order_btn")) {
-console.log("summary button clicked");
+      if (event.target.getAttribute("id") === "summary_place_order_btn") {
           try {
           let orderPayload = await createOrder("card");
           console.log(orderPayload);
