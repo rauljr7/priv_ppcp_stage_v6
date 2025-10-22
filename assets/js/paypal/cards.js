@@ -41,16 +41,20 @@ async function setupCardFields(sdk) {
       if (event.target.getAttribute("id") === "summary_place_order_btn") {
           try {
           let orderPayload = await createOrder("card");
+          let billing_information_from_session = get_session_billing_information();
           const {
             data,
             state
           } = await cardSession.submit(orderPayload.orderId, {
             billingAddress: {
-              postalCode: "95131"
-            },
+              addressLine1: billing_information_from_session.address_line_1,
+              addressLine2: "",
+              adminArea1: billing_information_from_session.state_province,
+              adminArea2: billing_information_from_session.city,
+              countryCode: billing_information_from_session.country,
+              postalCode: billing_information_from_session.postal_code
+            }
           });
-          console.log(data);
-          console.log(state);
 
           switch (state) {
             case "succeeded": {
