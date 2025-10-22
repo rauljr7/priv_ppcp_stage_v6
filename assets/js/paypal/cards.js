@@ -42,10 +42,7 @@ async function setupCardFields(sdk) {
           try {
           let orderPayload = await createOrder("card");
           let billing_information_from_session = get_session_billing_information();
-          const {
-            data,
-            state
-          } = await cardSession.submit(orderPayload.orderId, {
+          const { data, state } = await cardSession.submit(orderPayload.orderId, {
             billingAddress: {
               addressLine1: billing_information_from_session.address_line_1,
               addressLine2: "",
@@ -64,7 +61,12 @@ async function setupCardFields(sdk) {
               } = data
               // 3DS may or may not have occurred; Use liabilityShift 
               // to determine if the payment should be captured
-              const capture = await captureOrder(orderPayload);
+              run_loading({id: "card-fields", message: "Processing Payment..."});
+              let orderData = await captureOrder({ orderId: orderPayload.orderId });
+              set_session_transaction_payload(orderData).then(() => {
+                  let sid = get_session_id();
+                  window.location.assign(`receipt.html?session=${encodeURIComponent(sid)}`);
+              });
               // TODO: show success UI, redirect, etc.
               break;
             }
@@ -86,9 +88,10 @@ async function setupCardFields(sdk) {
           }
         } catch (err) {
           console.error("Payment flow error", err);
+          window.remove_loading?.({ id: "card-fields" });
           // TODO: Show generic error and allow retry
         }
-            }
+      }
 
   });
   window.remove_loading?.({ id: "card-fields" });
