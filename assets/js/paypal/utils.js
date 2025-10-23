@@ -46,6 +46,17 @@ function paymentSessionOptions(payment_type) {
     return paymentSessionOptions;
 }
 
+function random_suffix_seven_chars() {
+  let chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
+  let out = "";
+  let i = 0;
+  for (i = 0; i < 7; i++) {
+    let idx = Math.floor(Math.random() * chars.length);
+    out += chars.charAt(idx);
+  }
+  return out;
+}
+
 async function createOrder(payment_type) {
    let local_storage_website_session = JSON.parse(localStorage.getItem("website_session"));
    let orderPayload = {
@@ -54,6 +65,9 @@ async function createOrder(payment_type) {
    // https://developer.paypal.com/docs/api/orders/v2/#orders_create
    // https://developer.paypal.com/docs/api/orders/v2/#orders_create!ct=application/json&path=purchase_units&t=request
    orderPayload.purchase_units = local_storage_website_session.basket.purchase_units;
+   let random_suffix_for_reference_id = random_suffix_seven_chars();
+   orderPayload.purchase_units[0].reference_id += "_" + random_suffix_for_reference_id;
+
 
    let payment_method_query = "";
    if (payment_type) {
