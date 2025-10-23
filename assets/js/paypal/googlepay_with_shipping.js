@@ -163,7 +163,7 @@ async function setupGooglePayButton(sdkInstance) {
 
   try {
     const paymentsClient = new google.payments.api.PaymentsClient({
-      environment: "TEST", // Change to "PRODUCTION" for live transactions
+      environment: "PRODUCTION", // Change to "PRODUCTION" for live transactions
       paymentDataCallbacks: {
         onPaymentAuthorized: (paymentData) => {
           return onPaymentAuthorized(purchaseAmount, paymentData, googlePaySession);
