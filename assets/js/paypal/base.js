@@ -123,6 +123,7 @@ async function onPayPalWebSdkLoaded() {
       window.initCards();
    }
    else if (!is_fastlane_disabled && typeof window.initFastLane === "function") {
+      fastlane = await sdkInstance.createFastlane();
       window.initFastLane();
    }
 }

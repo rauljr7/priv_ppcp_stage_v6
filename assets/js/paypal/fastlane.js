@@ -1,43 +1,32 @@
 async function initFastLane() {
   fastlane.setLocale("en_us");
-
+  // Render Fastlane watermark
   const fastlaneWatermark = await fastlane.FastlaneWatermarkComponent({
     includeAdditionalInfo: true,
   });
   fastlaneWatermark.render("#watermark-container");
-
-  const emailInput = document.getElementById("contact_email_input");
-  emailInput.addEventListener("input", async (e) => {
+  // Handle email submission
+  const email_input = document.getElementById("contact_email_input");
+  email_input.addEventListener("input", async (e) => {
     e.preventDefault();
-
-    // Validate email format
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    if (!emailRegex.test(emailInput.value)) {
+    if (!emailRegex.test(email_input.value)) {
+      console.warn("Invalid email format");
       return;
     }
-
-    const { customerContextId } = await fastlane.identity.lookupCustomerByEmail(
-      emailInput.value,
-    );
-
+    const {
+      customerContextId
+    } = await fastlane.identity.lookupCustomerByEmail(email_input.value);
     let shouldRenderFastlaneMemberExperience = false;
     let profileData;
     if (customerContextId) {
-      const response =
-        await fastlane.identity.triggerAuthenticationFlow(customerContextId);
-
+      const response = await fastlane.identity.triggerAuthenticationFlow(customerContextId);
       if (response.authenticationState === "succeeded") {
         shouldRenderFastlaneMemberExperience = true;
         profileData = response.profileData;
       }
     }
-
-    const emailForm = document.getElementById("email-form");
-    emailForm.setAttribute("hidden", true);
-
-    const submitOrderButton = document.getElementById("submit-button");
-    submitOrderButton.removeAttribute("hidden");
-
+    // Route to appropriate experience
     if (shouldRenderFastlaneMemberExperience) {
       renderFastlaneMemberExperience(profileData);
     } else {
@@ -51,77 +40,38 @@ function setShippingAddressDisplay(shippingAddress) {
     name: { fullName },
     address: { addressLine1, adminArea2, adminArea1, postalCode },
   } = shippingAddress;
-  const shippingDisplayContainer = document.getElementById(
-    "shipping-display-container",
-  );
-  shippingDisplayContainer.removeAttribute("hidden");
-  shippingDisplayContainer.innerHTML = `<b>${fullName}</b><br><b>${adminArea2}</b><br><b>${adminArea1}</b><br><b>${postalCode}</b>`;
+  console.log(`<b>${fullName}</b><br><b>${adminArea2}</b><br><b>${adminArea1}</b><br><b>${postalCode}</b>`);
 }
 
 async function renderFastlaneMemberExperience(profileData) {
   if (profileData.shippingAddress) {
     setShippingAddressDisplay(profileData.shippingAddress);
-
-    const changeAddressButton = document.getElementById(
-      "change-shipping-button",
-    );
-
-    changeAddressButton.removeAttribute("hidden");
+    // Allow address changes
+    const changeAddressButton = document.getElementById("change-shipping-button");
     changeAddressButton.addEventListener("click", async () => {
-      const { selectedAddress, selectionChanged } =
-        await fastlane.profile.showShippingAddressSelector();
-
+      const {
+        selectedAddress,
+        selectionChanged
+      } = await fastlane.profile.showShippingAddressSelector();
       if (selectionChanged) {
         profileData.shippingAddress = selectedAddress;
         setShippingAddressDisplay(profileData.shippingAddress);
       }
     });
-
+    // Render payment component with shipping address
     const fastlanePaymentComponent = await fastlane.FastlanePaymentComponent({
       options: {},
       shippingAddress: profileData.shippingAddress,
     });
-
     fastlanePaymentComponent.render("#payment-container");
-
-    const submitButton = document.getElementById("submit-button");
-    submitButton.addEventListener("click", async () => {
-      const { id } = await fastlanePaymentComponent.getPaymentToken();
-
-      const orderResponse = await createOrder(id);
-      console.log("orderResponse: ", orderResponse);
-
-      if (orderResponse.status === "COMPLETED") {
-        alert("Order completed successfully! Check console for details.");
-      } else {
-        alert("There was an issue processing your order. Please try again.");
-      }
-    });
-  } else {
-    // Render your shipping address form
   }
 }
 
 async function renderFastlaneGuestExperience() {
   const cardTestingInfo = document.getElementById("card-testing-info");
   cardTestingInfo.removeAttribute("hidden");
-
   const FastlanePaymentComponent = await fastlane.FastlanePaymentComponent({});
   await FastlanePaymentComponent.render("#card-container");
-
-  const submitButton = document.getElementById("submit-button");
-  submitButton.addEventListener("click", async () => {
-    const { id } = await FastlanePaymentComponent.getPaymentToken();
-
-    const orderResponse = await createOrder(id);
-    console.log("orderResponse: ", orderResponse);
-
-    if (orderResponse.status === "COMPLETED") {
-      alert("Order completed successfully! Check console for details.");
-    } else {
-      alert("There was an issue processing your order. Please try again.");
-    }
-  });
 }
 
 async function createOrder(paymentToken) {
