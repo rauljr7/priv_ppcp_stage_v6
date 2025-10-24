@@ -117,7 +117,12 @@ async function onPayPalWebSdkLoaded() {
    if (typeof window.initGooglePay === "function") {
       window.initGooglePay();
    }
-   if (typeof window.initCards === "function") {
+   // Either fastlane or direct card processing to load
+   let is_fastlane_disabled = new URLSearchParams(window.location.search).get("debug") === "disablefl";
+   if (is_fastlane_disabled && typeof window.initCards === "function") {
       window.initCards();
+   }
+   else if (!is_fastlane_disabled && typeof window.initFastLane === "function") {
+      window.initFastLane();
    }
 }
