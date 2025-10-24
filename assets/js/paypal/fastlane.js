@@ -25,7 +25,7 @@ async function handle_email_input() {
       console.warn("Invalid email format");
       return;
     }
-    
+    let next_button = document.getElementById("contact_next_btn");
     let fastlaneSpinner = document.getElementById("fastlane_spinner");
     next_button.style = "cursor:progress";
     next_button.textContent = "Fastlane looking up email...";
