@@ -6,10 +6,15 @@ async function initFastLane() {
   });
   fastlaneWatermark.render("#watermark-container");
 
-  const emailInput = document.getElementById("email-input");
-  const emailSubmitButton = document.getElementById("email-submit-button");
-  emailSubmitButton.addEventListener("click", async (e) => {
+  const emailInput = document.getElementById("contact_email_input");
+  emailInput.addEventListener("input", async (e) => {
     e.preventDefault();
+
+    // Validate email format
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(emailInput.value)) {
+      return;
+    }
 
     const { customerContextId } = await fastlane.identity.lookupCustomerByEmail(
       emailInput.value,
