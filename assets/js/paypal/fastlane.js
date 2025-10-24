@@ -1,3 +1,5 @@
+let email_input = document.getElementById("contact_email_input");
+
 async function initFastLane() {
     fastlane.setLocale("en_us");
     // Render Fastlane watermark
@@ -6,7 +8,6 @@ async function initFastLane() {
     });
     fastlaneWatermark.render("#watermark-container");
     // Handle email submission
-    const email_input = document.getElementById("contact_email_input");
   
     if (email_input.value.trim() !== "") {
         console.log("Pre-filled email detected, processing...");
