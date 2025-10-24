@@ -97,6 +97,7 @@ async function onPayPalWebSdkLoaded() {
       const clientToken = await getBrowserSafeClientToken();
       sdkInstance = await window.paypal.createInstance({
          clientToken,
+         clientMetadataId: get_session_id(), //Replace by building your own clientMetadataId
          components: ["paypal-payments", "paypal-messages", "venmo-payments", "googlepay-payments", "card-fields", "fastlane"]
       });
    } catch (error) {
