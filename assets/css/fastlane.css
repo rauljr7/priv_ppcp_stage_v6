@@ -1,7 +1,7 @@
 .fastlane_spinner {
   display: inline-block;
-  width: 25px;
-  height: 25px;
+  width: 15px;
+  height: 15px;
   box-sizing: border-box;
   border-radius: 50%;
   border: 3px solid rgba(37, 99, 235, 0.25);
