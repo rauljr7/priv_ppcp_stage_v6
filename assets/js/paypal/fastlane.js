@@ -29,12 +29,14 @@ async function handle_email_input() {
     fastlaneSpinner.classList.add("fastlane_spinner");
     let next_button = document.getElementById("contact_next_btn");
     next_button.disabled = true;
+    next_button.setAttribute('data-busy', 'true');
     next_button.textContent = "Fastlane looking up email...";
     const {
       customerContextId
     } = await fastlane.identity.lookupCustomerByEmail(email_input.value);
     fastlaneSpinner.classList.remove("fastlane_spinner");
     next_button.disabled = false;
+    next_button.removeAttribute('data-busy');
     next_button.textContent = "Next";
     let shouldRenderFastlaneMemberExperience = false;
     let profileData;

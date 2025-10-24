@@ -131,3 +131,19 @@ label {
   margin-top: 24px;
   margin-bottom: 24px;
 }
+#contact_next_btn {
+  display: inline-block;
+  white-space: nowrap;
+  transform-origin: left center;
+  transition:
+    transform 180ms ease,
+    padding 180ms ease,
+    letter-spacing 180ms ease;
+}
+
+#contact_next_btn[data-busy="true"] {
+  transform: scaleX(1.08);
+  padding-left: 18px;
+  padding-right: 24px;
+  letter-spacing: 0.2px;
+}
