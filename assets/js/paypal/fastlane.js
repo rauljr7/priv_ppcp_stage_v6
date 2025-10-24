@@ -93,8 +93,6 @@ async function renderFastlaneMemberExperience(profileData) {
 }
 
 async function renderFastlaneGuestExperience() {
-  const cardTestingInfo = document.getElementById("card-testing-info");
-  cardTestingInfo.removeAttribute("hidden");
   const FastlanePaymentComponent = await fastlane.FastlanePaymentComponent({});
   await FastlanePaymentComponent.render("#card-container");
 }
