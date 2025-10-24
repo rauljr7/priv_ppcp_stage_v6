@@ -60,7 +60,12 @@ function setShippingAddressDisplay(shippingAddress) {
     name: { fullName },
     address: { addressLine1, adminArea2, adminArea1, postalCode },
   } = shippingAddress;
-  console.log(`<b>${fullName}</b><br><b>${adminArea2}</b><br><b>${adminArea1}</b><br><b>${postalCode}</b>`);
+  document.getElementById("fastlane-shipping").innerHTML = `
+    <b>${fullName}</b><br>
+    <b>${adminArea2}</b><br>
+    <b>${adminArea1}</b><br>
+    <b>${postalCode}</b>
+  `;
 }
 
 async function renderFastlaneMemberExperience(profileData) {
