@@ -1,14 +1,24 @@
 async function initFastLane() {
-  fastlane.setLocale("en_us");
-  // Render Fastlane watermark
-  const fastlaneWatermark = await fastlane.FastlaneWatermarkComponent({
-    includeAdditionalInfo: true,
-  });
-  fastlaneWatermark.render("#watermark-container");
-  // Handle email submission
-  const email_input = document.getElementById("contact_email_input");
-  email_input.addEventListener("input", async (e) => {
+    fastlane.setLocale("en_us");
+    // Render Fastlane watermark
+    const fastlaneWatermark = await fastlane.FastlaneWatermarkComponent({
+        includeAdditionalInfo: true,
+    });
+    fastlaneWatermark.render("#watermark-container");
+    // Handle email submission
+    const email_input = document.getElementById("contact_email_input");
+  
+    if (email_input.value.trim() !== "") {
+        console.log("Pre-filled email detected, processing...");
+        await handle_email_input();
+    }
+    email_input.addEventListener("input", async (e) => {
     e.preventDefault();
+    await handle_email_input();
+    });
+}
+
+async function handle_email_input() {
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     if (!emailRegex.test(email_input.value)) {
       console.warn("Invalid email format");
@@ -35,7 +45,6 @@ async function initFastLane() {
     } else {
       renderFastlaneGuestExperience();
     }
-  });
 }
 
 function setShippingAddressDisplay(shippingAddress) {
