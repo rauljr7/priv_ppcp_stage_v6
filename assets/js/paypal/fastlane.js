@@ -14,9 +14,12 @@ async function initFastLane() {
       console.warn("Invalid email format");
       return;
     }
+    let fastlaneSpinner = document.getElementById("fastlane_spinner");
+    fastlaneSpinner.classList.add("fastlane_spinner");
     const {
       customerContextId
     } = await fastlane.identity.lookupCustomerByEmail(email_input.value);
+    fastlaneSpinner.classList.remove("fastlane_spinner");
     let shouldRenderFastlaneMemberExperience = false;
     let profileData;
     if (customerContextId) {
